@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プロジェクトプロファイル ジェネレータ</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --ink:#e6e8ec; --muted:#9aa3b2; --accent:#6ea8fe; --warn:#e0a33e; --danger:#e06c75; --ok:#7fb069;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif}
+  header{position:sticky;top:0;z-index:5;background:rgba(15,17,21,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:16px 22px}
+  header h1{margin:0 0 4px;font-size:18px}
+  header p{margin:0;color:var(--muted);font-size:13px}
+  .wrap{max-width:920px;margin:0 auto;padding:20px 22px 140px}
+  .cat{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;overflow:hidden}
+  .cat-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+  .cat-head:hover{background:var(--panel2)}
+  .cat-code{font-weight:700;color:var(--accent);min-width:54px}
+  .cat-title{flex:1}
+  .cat-count{color:var(--muted);font-size:12px}
+  .toggle{position:relative;width:46px;height:26px;flex:none}
+  .toggle input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:#3a3f4b;border-radius:26px;transition:.15s}
+  .slider:before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+  .toggle input:checked + .slider{background:var(--ok)}
+  .toggle input:checked + .slider:before{transform:translateX(20px)}
+  .vp-list{border-top:1px solid var(--line);display:none}
+  .cat.open .vp-list{display:block}
+  .cat.excluded{opacity:.55}
+  .cat.excluded .vp-list{display:none}
+  .vp{display:flex;align-items:flex-start;gap:12px;padding:11px 16px 11px 70px;border-top:1px dashed var(--line)}
+  .vp:first-child{border-top:none}
+  .vp-main{flex:1;min-width:0}
+  .vp-id{font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)}
+  .vp-name{font-weight:600}
+  .vp-check{color:var(--muted);font-size:12.5px}
+  .vp-ex{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer}
+  .reason{display:none;margin:6px 0 0;width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:7px 9px;font:13px/1.5 inherit}
+  .vp.exrow .reason,.cat.excluded .cat-reason{display:block}
+  .cat-reason{display:none;margin:0 16px 14px 70px;width:calc(100% - 86px);background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:7px 9px;font:13px/1.5 inherit}
+  .badge{font-size:11px;padding:1px 7px;border-radius:20px;border:1px solid}
+  .badge.protect{color:var(--warn);border-color:var(--warn)}
+  .meta{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+  .meta label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  .meta input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:8px 10px;font:14px inherit}
+  .note{background:rgba(224,163,62,.08);border:1px solid var(--warn);border-radius:10px;padding:10px 14px;color:#f0d49a;font-size:13px;margin:14px 0}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(15,17,21,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:12px 22px;display:flex;gap:12px;align-items:center;justify-content:flex-end}
+  .summary{margin-right:auto;color:var(--muted);font-size:13px}
+  button{background:var(--accent);color:#0b1220;border:0;border-radius:9px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:14px}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;max-width:760px;width:92%;padding:0}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .dlg-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+  pre{margin:0;padding:16px 18px;max-height:60vh;overflow:auto;font:12.5px/1.5 ui-monospace,monospace;white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+<header>
+  <h1>プロジェクトプロファイル ジェネレータ</h1>
+  <p>横断観点カタログ（14分類・88観点）から「使う／使わない」を選び、<code>project-profile.json</code> を生成します。大分類トグルでまとめて除外、観点ごとに個別除外もできます。</p>
+</header>
+<div class="wrap">
+  <div class="note">日本語Webアプリでは <b>H-I18N-01〜04</b>（絵文字・正規化・全角半角・異体字）は多言語非対応でも除外しないことを推奨します。除外しようとすると確認が出ます。</div>
+
+  <div class="meta">
+    <strong>プロジェクト前提</strong>
+    <label>プロジェクト名</label><input id="m-title" placeholder="例: 会員制サービス">
+    <label>対応ブラウザ</label><input id="m-browsers" placeholder="例: Chrome / Edge / Safari の最新2バージョン">
+    <label>対応画面サイズ</label><input id="m-screens" placeholder="例: PC(1280px〜) / スマホ(375px〜)">
+    <label>多言語対応</label><input id="m-i18n" placeholder="例: 日本語のみ">
+    <label>アクセシビリティ要件</label><input id="m-a11y" placeholder="例: 特になし">
+    <label>認証・権限</label><input id="m-authz" placeholder="例: ログイン必須。管理者/一般">
+  </div>
+
+  <div id="cats"></div>
+</div>
+
+<footer>
+  <span class="summary" id="summary"></span>
+  <button class="ghost" id="btn-expand">すべて展開</button>
+  <button id="btn-gen">project-profile.json を生成</button>
+</footer>
+
+<dialog id="dlg">
+  <div class="dlg-head"><strong>project-profile.json</strong>
+    <span><button class="ghost" id="btn-copy">コピー</button> <button id="btn-dl">ダウンロード</button></span>
+  </div>
+  <pre id="out"></pre>
+</dialog>
+
+<script>
+const DATA = [{"code": "STR", "title": "文字列・文字種", "viewpoints": [{"id": "H-STR-01", "name": "空・空白のみ", "check": "必須なら適切なエラー、任意なら正しく空として扱う"}, {"id": "H-STR-02", "name": "前後の空白", "check": "トリムされるか／そのまま保存か仕様どおりか"}, {"id": "H-STR-03", "name": "最大長ちょうど・超過", "check": "上限で受理、超過で適切に拒否（境界値と連動）"}, {"id": "H-STR-04", "name": "極端な長文字列", "check": "保存・表示・通信が壊れない（DISP-03と連動）"}, {"id": "H-STR-05", "name": "改行・タブ・制御文字", "check": "改行コード混在・タブ・制御文字で崩れない"}, {"id": "H-STR-06", "name": "特殊記号", "check": "記号類を含んでも保存・表示・検索が壊れない"}, {"id": "H-STR-07", "name": "空白の連続・種類", "check": "連続空白の畳み込み有無、タブ/全角/NBSPの扱い"}, {"id": "H-STR-08", "name": "大文字小文字", "check": "比較・検索・一意制約での大小区別が仕様どおり"}, {"id": "H-STR-09", "name": "先頭・末尾の特殊文字", "check": "先頭がハイフン/記号/数字でも壊れない"}]}, {"code": "I18N", "title": "国際化・文字コード（日本語Webアプリで特に効く）", "viewpoints": [{"id": "H-I18N-01", "name": "絵文字・サロゲートペア", "check": "4バイト文字が保存・表示・文字数カウントで壊れない（DBが`utf8`でなく`utf8mb4`か等）"}, {"id": "H-I18N-02", "name": "Unicode正規化（NFC/NFD）", "check": "濁点分離・結合文字で検索ヒット/重複判定がずれない"}, {"id": "H-I18N-03", "name": "全角・半角", "check": "全角英数/半角カナの入力・検索・重複判定が仕様どおり"}, {"id": "H-I18N-04", "name": "異体字・機種依存文字", "check": "異体字セレクタ・丸数字・ローマ数字で壊れない"}, {"id": "H-I18N-05", "name": "ゼロ幅・不可視文字", "check": "ゼロ幅スペース等が混入しても検知/除去されるか"}, {"id": "H-I18N-06", "name": "双方向テキスト(RTL)", "check": "アラビア語/ヘブライ語混在で表示が破綻しない（多言語対応時）"}, {"id": "H-I18N-07", "name": "文字数カウント基準", "check": "サロゲート/結合文字を1文字と数えるか、上限判定と一致するか"}]}, {"code": "NUM", "title": "数値・量", "viewpoints": [{"id": "H-NUM-01", "name": "0・負・最小最大", "check": "0/負値/範囲端の扱い（境界値と連動）"}, {"id": "H-NUM-02", "name": "桁あふれ・極大値", "check": "巨大値で計算・表示・桁あふれが壊れない"}, {"id": "H-NUM-03", "name": "小数・精度", "check": "小数点以下の丸め・精度・通貨計算が仕様どおり"}, {"id": "H-NUM-04", "name": "非数値・形式", "check": "数字以外/指数表記/カンマ区切りの扱い"}, {"id": "H-NUM-05", "name": "先頭ゼロ・符号", "check": "`007`/`+5`/`--1` の扱い"}, {"id": "H-NUM-06", "name": "区切り・通貨記号", "check": "カンマ/円記号混入時の受理可否"}]}, {"code": "DATE", "title": "日付・時刻", "viewpoints": [{"id": "H-DATE-01", "name": "存在しない日付", "check": "2/30・9/31・13月などを拒否"}, {"id": "H-DATE-02", "name": "うるう年", "check": "2/29 を閏年で受理・平年で拒否"}, {"id": "H-DATE-03", "name": "境界の日時", "check": "月末・年末年始・00:00/23:59 の扱い"}, {"id": "H-DATE-04", "name": "期間の前後関係", "check": "開始>終了の逆転、同一日時を許すか"}, {"id": "H-DATE-05", "name": "タイムゾーン・サマータイム", "check": "TZ差・日付変更線・DSTで表示/保存がずれない"}, {"id": "H-DATE-06", "name": "フォーマット揺れ", "check": "複数フォーマット入力・和暦・2桁年の扱い"}, {"id": "H-DATE-07", "name": "過去・未来の極端値", "check": "極端に過去/未来、未入力の扱い"}]}, {"code": "SEL", "title": "選択・候補", "viewpoints": [{"id": "H-SEL-01", "name": "未選択", "check": "必須選択を空のまま送信したときのエラー"}, {"id": "H-SEL-02", "name": "候補ゼロ・1件・大量", "check": "候補が0/1/数千件のときの表示・操作性"}, {"id": "H-SEL-03", "name": "依存選択の整合", "check": "親選択を変えたとき子候補が正しく更新/リセット"}, {"id": "H-SEL-04", "name": "複数選択の上限・全選択", "check": "上限超過・全選択・全解除の扱い"}, {"id": "H-SEL-05", "name": "候補の長文・特殊文字", "check": "ラベルが長い/記号を含む候補で表示崩れしない"}, {"id": "H-SEL-06", "name": "無効化候補の選択", "check": "非活性候補を選べない・選んでも無効か"}]}, {"code": "FILE", "title": "ファイル・添付", "viewpoints": [{"id": "H-FILE-01", "name": "拡張子・形式違い", "check": "許可外形式・拡張子偽装の拒否"}, {"id": "H-FILE-02", "name": "サイズ境界・0バイト", "check": "上限ちょうど/超過/空ファイルの扱い"}, {"id": "H-FILE-03", "name": "ファイル名の特殊文字", "check": "日本語名・空白・パス文字・絵文字名の扱い"}, {"id": "H-FILE-04", "name": "複数・重複・連続", "check": "複数同時/同名重複/連続アップロード"}, {"id": "H-FILE-05", "name": "破損・中断", "check": "壊れたファイル・通信中断時の挙動"}]}, {"code": "DISP", "title": "表示・レイアウト・一覧", "viewpoints": [{"id": "H-DISP-01", "name": "ゼロ件表示", "check": "データ0件で空状態が正しく出る（エラーや崩れでない）"}, {"id": "H-DISP-02", "name": "1件・大量件数", "check": "1件/数千件での表示・スクロール・性能"}, {"id": "H-DISP-03", "name": "長文字列の折り返し・はみ出し", "check": "折り返し/省略(…)/横はみ出しが仕様どおり"}, {"id": "H-DISP-04", "name": "空・欠損データ", "check": "null/未設定項目が「—」等で適切に表示される"}, {"id": "H-DISP-05", "name": "桁数・幅の変動", "check": "金額桁数・件数増減で列幅やレイアウトが崩れない"}, {"id": "H-DISP-06", "name": "ソート・ページング境界", "check": "並べ替え・最終ページ・端数ページの整合"}, {"id": "H-DISP-07", "name": "同値ソートの安定性", "check": "同じ値の並び順が一定か"}, {"id": "H-DISP-08", "name": "数値・日付の表示形式", "check": "桁区切り・通貨・日付の表記が統一されている"}]}, {"code": "NAV", "title": "操作・遷移・ナビゲーション", "viewpoints": [{"id": "H-NAV-01", "name": "二重送信・連打", "check": "送信ボタン連打で二重登録されない（多重防止）"}, {"id": "H-NAV-02", "name": "ブラウザ戻る/進む", "check": "戻る/進む後の表示・再送信・状態整合"}, {"id": "H-NAV-03", "name": "リロード", "check": "入力中/送信後のリロードでデータ・状態が壊れない"}, {"id": "H-NAV-04", "name": "直URLアクセス", "check": "ログイン前/権限外/不正パラメータでの直アクセス"}, {"id": "H-NAV-05", "name": "中断・離脱", "check": "入力途中で離脱→戻ったときの警告/復元"}, {"id": "H-NAV-06", "name": "複数タブ・複数ウィンドウ", "check": "同一機能を2タブで開いたときの整合"}, {"id": "H-NAV-07", "name": "ディープリンク・ブックマーク", "check": "中間状態のURLをブックマーク後に開く"}, {"id": "H-NAV-08", "name": "キャンセル・取り消し", "check": "取り消し/Undoで副作用が残らない"}]}, {"code": "CONC", "title": "並行・状態・同時実行", "viewpoints": [{"id": "H-CONC-01", "name": "同時編集（競合）", "check": "2者が同じデータを更新したときの整合（楽観ロック等）"}, {"id": "H-CONC-02", "name": "編集中の削除", "check": "開いている間に対象が削除された場合の挙動"}, {"id": "H-CONC-03", "name": "多重ログイン", "check": "同一アカウント複数セッションの整合"}, {"id": "H-CONC-04", "name": "状態違反の操作", "check": "その状態で禁止された操作を行ったときの拒否"}, {"id": "H-CONC-05", "name": "処理中の再操作", "check": "処理中に同じ操作を重ねたときの扱い"}]}, {"code": "NET", "title": "通信・エラー・回復", "viewpoints": [{"id": "H-NET-01", "name": "通信失敗", "check": "通信エラー時に適切なメッセージと回復導線が出る"}, {"id": "H-NET-02", "name": "タイムアウト", "check": "応答遅延/タイムアウト時の表示と再試行"}, {"id": "H-NET-03", "name": "オフライン・回線断", "check": "送信中の回線断でデータ・状態が壊れない"}, {"id": "H-NET-04", "name": "遅延中のUI", "check": "応答待ち中の二重操作防止・ローディング表示"}, {"id": "H-NET-05", "name": "部分失敗", "check": "複数処理の一部失敗時の整合（中途半端に残らない）"}, {"id": "H-NET-06", "name": "セッション切れ", "check": "操作中のセッション失効時の挙動・再ログイン導線"}]}, {"code": "ENV", "title": "環境・構成", "viewpoints": [{"id": "H-ENV-01", "name": "対応ブラウザ差", "check": "サポート対象ブラウザで表示・動作が一致"}, {"id": "H-ENV-02", "name": "画面サイズ・レスポンシブ", "check": "狭幅/広幅でレイアウトが破綻しない"}, {"id": "H-ENV-03", "name": "ズーム・文字サイズ", "check": "ブラウザズーム200%・文字拡大で崩れない"}, {"id": "H-ENV-04", "name": "入力デバイス", "check": "タッチ/キーボードのみ/IME操作で問題ない"}, {"id": "H-ENV-05", "name": "ダークモード・テーマ", "check": "OS/ブラウザのダークモードで視認性が保たれる"}, {"id": "H-ENV-06", "name": "クッキー/ストレージ制限", "check": "サードパーティCookie無効等での挙動"}]}, {"code": "SEC", "title": "セキュリティ的入力（仕様ベースの範囲）", "viewpoints": [{"id": "H-SEC-01", "name": "HTML/スクリプト混入", "check": "タグ/スクリプト文字列がエスケープされて表示される"}, {"id": "H-SEC-02", "name": "引用符・特殊記号", "check": "クエリ特殊文字を含んでも壊れず安全に保存/表示"}, {"id": "H-SEC-03", "name": "URLパラメータ改変", "check": "パラメータ書き換え・欠落で不正アクセスできない"}, {"id": "H-SEC-04", "name": "権限外操作", "check": "権限のないユーザーが操作を試みたときの拒否"}, {"id": "H-SEC-05", "name": "入力の信頼境界", "check": "クライアント側制限をすり抜けてもサーバーで弾く"}]}, {"code": "A11Y", "title": "アクセシビリティ", "viewpoints": [{"id": "H-A11Y-01", "name": "キーボード操作", "check": "マウスなしで全操作が可能（フォーカス順序が自然）"}, {"id": "H-A11Y-02", "name": "フォーカス可視", "check": "フォーカス位置が視覚的に分かる"}, {"id": "H-A11Y-03", "name": "代替テキスト・ラベル", "check": "画像のalt・入力のラベルが適切"}, {"id": "H-A11Y-04", "name": "コントラスト", "check": "文字色と背景のコントラストが十分"}, {"id": "H-A11Y-05", "name": "エラーの伝達", "check": "エラーが色だけでなくテキストでも伝わる"}]}, {"code": "NFR", "title": "非機能・権限境界", "viewpoints": [{"id": "H-NFR-01", "name": "応答時間", "check": "想定データ量での応答が許容時間内"}, {"id": "H-NFR-02", "name": "同時アクセス", "check": "複数同時利用で性能・整合が保たれる"}, {"id": "H-NFR-03", "name": "権限マトリクス", "check": "役割ごとに見える/操作できる範囲が仕様どおり"}, {"id": "H-NFR-04", "name": "操作ログ・監査", "check": "重要操作が記録される（要件がある場合）"}, {"id": "H-NFR-05", "name": "データ量境界", "check": "上限件数・容量に達したときの挙動"}]}];
+const PROTECTED = ["H-I18N-01", "H-I18N-02", "H-I18N-03", "H-I18N-04"];
+const catsEl = document.getElementById('cats');
+
+DATA.forEach(cat=>{
+  const c = document.createElement('div'); c.className='cat'; c.dataset.code=cat.code;
+  c.innerHTML = `
+    <div class="cat-head">
+      <span class="cat-code">${cat.code}</span>
+      <span class="cat-title">${cat.title}</span>
+      <span class="cat-count">${cat.viewpoints.length}観点</span>
+      <label class="toggle" title="この分類を使う/使わない"><input type="checkbox" class="cat-on" checked><span class="slider"></span></label>
+    </div>
+    <input class="cat-reason" placeholder="分類を除外する理由（必須）">
+    <div class="vp-list"></div>`;
+  const list = c.querySelector('.vp-list');
+  cat.viewpoints.forEach(vp=>{
+    const protect = PROTECTED.includes(vp.id);
+    const v=document.createElement('div'); v.className='vp'; v.dataset.id=vp.id;
+    v.innerHTML=`
+      <div class="vp-main">
+        <div><span class="vp-id">${vp.id}</span> <span class="vp-name">${vp.name}</span> ${protect?'<span class="badge protect">除外非推奨</span>':''}</div>
+        <div class="vp-check">${vp.check}</div>
+        <input class="reason" placeholder="この観点を除外する理由（必須）">
+      </div>
+      <label class="vp-ex"><input type="checkbox" class="vp-exc">個別除外</label>`;
+    list.appendChild(v);
+  });
+  catsEl.appendChild(c);
+
+  const head=c.querySelector('.cat-head');
+  head.addEventListener('click',e=>{ if(e.target.closest('.toggle'))return; c.classList.toggle('open'); });
+  c.querySelector('.cat-on').addEventListener('change',e=>{
+    c.classList.toggle('excluded', !e.target.checked);
+    updateSummary();
+  });
+  list.querySelectorAll('.vp-exc').forEach(cb=>cb.addEventListener('change',e=>{
+    const vp=e.target.closest('.vp'); const id=vp.dataset.id;
+    if(e.target.checked && PROTECTED.includes(id)){
+      if(!confirm(id+' は日本語入力で日常的に発生する観点です。本当に除外しますか？')){ e.target.checked=false; return; }
+    }
+    vp.classList.toggle('exrow', e.target.checked);
+    updateSummary();
+  }));
+});
+
+function updateSummary(){
+  const exCats=[...document.querySelectorAll('.cat.excluded')].length;
+  const exVps=[...document.querySelectorAll('.vp-exc:checked')].length;
+  document.getElementById('summary').textContent=`除外: 分類 ${exCats} / 観点 ${exVps}`;
+}
+updateSummary();
+
+document.getElementById('btn-expand').addEventListener('click',()=>{
+  const any=[...document.querySelectorAll('.cat:not(.excluded)')].some(c=>!c.classList.contains('open'));
+  document.querySelectorAll('.cat:not(.excluded)').forEach(c=>c.classList.toggle('open',any));
+});
+
+document.getElementById('btn-gen').addEventListener('click',()=>{
+  const exclusions=[]; let missing=false;
+  document.querySelectorAll('.cat').forEach(c=>{
+    const code=c.dataset.code;
+    if(c.classList.contains('excluded')){
+      const r=c.querySelector('.cat-reason').value.trim();
+      if(!r){missing=true; c.querySelector('.cat-reason').style.borderColor='var(--danger)';}
+      exclusions.push({catalogId:code+' 全体', scope:'全画面', reason:r||'(理由未入力)'});
+    }else{
+      c.querySelectorAll('.vp-exc:checked').forEach(cb=>{
+        const vp=cb.closest('.vp'); const r=vp.querySelector('.reason').value.trim();
+        if(!r){missing=true; vp.querySelector('.reason').style.borderColor='var(--danger)';}
+        exclusions.push({catalogId:vp.dataset.id, scope:'全画面', reason:r||'(理由未入力)'});
+      });
+    }
+  });
+  const today=new Date().toISOString().slice(0,10);
+  const profile={
+    schemaVersion:'1.0', type:'project-profile',
+    title:(document.getElementById('m-title').value||'<プロジェクト名>')+' プロジェクトプロファイル',
+    status:'draft', updated:today,
+    environment:{
+      browsers:document.getElementById('m-browsers').value||'',
+      screenSizes:document.getElementById('m-screens').value||'',
+      i18n:document.getElementById('m-i18n').value||'',
+      accessibility:document.getElementById('m-a11y').value||'',
+      authz:document.getElementById('m-authz').value||'',
+      charset:'UTF-8(utf8mb4)'
+    },
+    exclusions, additionalViewpoints:[],
+    notes:['H-I18N-01〜04（絵文字・サロゲートペア・正規化・全角半角・異体字）は日本語のみでも残すこと。']
+  };
+  document.getElementById('out').textContent=JSON.stringify(profile,null,2);
+  document.getElementById('dlg').showModal();
+  if(missing) alert('理由が未入力の除外があります。赤枠の欄を埋めてから再生成してください（暫定で (理由未入力) と出力しています）。');
+});
+
+document.getElementById('btn-copy').addEventListener('click',()=>{navigator.clipboard.writeText(document.getElementById('out').textContent);});
+document.getElementById('btn-dl').addEventListener('click',()=>{
+  const blob=new Blob([document.getElementById('out').textContent],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='project-profile.json'; a.click();
+});
+</script>
+</body>
+</html>

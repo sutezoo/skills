@@ -1,0 +1,442 @@
+{
+  "schemaVersion": "1.2",
+  "id": "SCR-030",
+  "title": "プロフィール編集画面",
+  "type": "screen",
+  "status": "draft",
+  "layout": {
+    "mockImage": "mocks/SCR-030.png"
+  },
+  "navigation": {
+    "entryPoints": [],
+    "exitPoints": []
+  },
+  "states": [
+    {
+      "name": "読み込み中",
+      "initial": true,
+      "description": "初期値を取得している。入力欄は表示しない"
+    },
+    {
+      "name": "編集可能",
+      "description": "値を表示し、編集・保存できる"
+    },
+    {
+      "name": "保存中",
+      "description": "保存処理の完了を待っている。入力欄は編集できない"
+    },
+    {
+      "name": "保存完了",
+      "description": "保存に成功し、完了を通知している"
+    },
+    {
+      "name": "競合",
+      "description": "他の更新と競合し、最新の取得を促している"
+    }
+  ],
+  "events": [
+    {
+      "name": "初期値の取得",
+      "description": "画面表示時に初期値の取得を試みる"
+    },
+    {
+      "name": "入力値の変更",
+      "description": "いずれかの入力欄の値が変わる"
+    },
+    {
+      "name": "保存の実行",
+      "description": "保存ボタンを押す"
+    },
+    {
+      "name": "保存結果の受信",
+      "description": "保存処理の応答が返る"
+    },
+    {
+      "name": "通知の時間経過",
+      "description": "保存完了通知の表示から3秒経過する"
+    },
+    {
+      "name": "最新の取得",
+      "description": "競合通知内の取得操作を行う"
+    }
+  ],
+  "elements": [
+    {
+      "name": "表示名",
+      "kind": "テキスト入力",
+      "required": true,
+      "constraints": {
+        "minLength": 1,
+        "maxLength": 50,
+        "blankOnly": false
+      },
+      "validations": [
+        {
+          "condition": "未入力または空白のみ",
+          "message": "表示名を入力してください"
+        },
+        {
+          "condition": "50文字を超える",
+          "message": "表示名は50文字以内で入力してください"
+        }
+      ],
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "operable"
+        },
+        "保存中": {
+          "visibility": "visible"
+        },
+        "保存完了": {
+          "visibility": "operable"
+        },
+        "競合": {
+          "visibility": "operable"
+        }
+      }
+    },
+    {
+      "name": "メールアドレス",
+      "kind": "テキスト入力",
+      "required": true,
+      "constraints": {
+        "format": "email"
+      },
+      "validations": [
+        {
+          "condition": "未入力",
+          "message": "メールアドレスを入力してください"
+        },
+        {
+          "condition": "形式が不正",
+          "message": "メールアドレスの形式が正しくありません"
+        },
+        {
+          "condition": "他の利用者と重複している",
+          "message": "このメールアドレスは既に使用されています"
+        }
+      ],
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "operable"
+        },
+        "保存中": {
+          "visibility": "visible"
+        },
+        "保存完了": {
+          "visibility": "operable"
+        },
+        "競合": {
+          "visibility": "operable"
+        }
+      }
+    },
+    {
+      "name": "自己紹介",
+      "kind": "テキストエリア",
+      "constraints": {
+        "maxLength": 500
+      },
+      "validations": [
+        {
+          "condition": "500文字を超える",
+          "message": "自己紹介は500文字以内で入力してください"
+        }
+      ],
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "operable"
+        },
+        "保存中": {
+          "visibility": "visible"
+        },
+        "保存完了": {
+          "visibility": "operable"
+        },
+        "競合": {
+          "visibility": "operable"
+        }
+      }
+    },
+    {
+      "name": "文字数カウンタ",
+      "kind": "表示テキスト",
+      "description": "自己紹介の入力文字数を「現在数 / 500」で表示する",
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "visible"
+        },
+        "保存中": {
+          "visibility": "visible"
+        },
+        "保存完了": {
+          "visibility": "visible"
+        },
+        "競合": {
+          "visibility": "visible"
+        }
+      }
+    },
+    {
+      "name": "保存ボタン",
+      "kind": "ボタン",
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "conditional",
+          "condition": "入力内容に変更があるときのみ"
+        },
+        "保存中": {
+          "visibility": "visible"
+        },
+        "保存完了": {
+          "visibility": "conditional",
+          "condition": "入力内容に変更があるときのみ"
+        },
+        "競合": {
+          "visibility": "conditional",
+          "condition": "入力内容に変更があるときのみ"
+        }
+      }
+    },
+    {
+      "name": "エラーバナー",
+      "kind": "バナー",
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "conditional",
+          "condition": "保存・通信に失敗したとき"
+        },
+        "保存中": {
+          "visibility": "hidden"
+        },
+        "保存完了": {
+          "visibility": "hidden"
+        },
+        "競合": {
+          "visibility": "hidden"
+        }
+      }
+    },
+    {
+      "name": "保存完了の通知",
+      "kind": "通知トースト",
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "hidden"
+        },
+        "保存中": {
+          "visibility": "hidden"
+        },
+        "保存完了": {
+          "visibility": "visible"
+        },
+        "競合": {
+          "visibility": "hidden"
+        }
+      }
+    },
+    {
+      "name": "競合の通知",
+      "kind": "バナー",
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "編集可能": {
+          "visibility": "hidden"
+        },
+        "保存中": {
+          "visibility": "hidden"
+        },
+        "保存完了": {
+          "visibility": "hidden"
+        },
+        "競合": {
+          "visibility": "visible"
+        }
+      },
+      "children": [
+        {
+          "name": "競合メッセージ",
+          "kind": "表示テキスト",
+          "displayByState": {
+            "読み込み中": {
+              "visibility": "hidden"
+            },
+            "編集可能": {
+              "visibility": "hidden"
+            },
+            "保存中": {
+              "visibility": "hidden"
+            },
+            "保存完了": {
+              "visibility": "hidden"
+            },
+            "競合": {
+              "visibility": "visible"
+            }
+          }
+        },
+        {
+          "name": "最新を取得ボタン",
+          "kind": "ボタン",
+          "displayByState": {
+            "読み込み中": {
+              "visibility": "hidden"
+            },
+            "編集可能": {
+              "visibility": "hidden"
+            },
+            "保存中": {
+              "visibility": "hidden"
+            },
+            "保存完了": {
+              "visibility": "hidden"
+            },
+            "競合": {
+              "visibility": "operable"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "behaviorMatrix": [
+    {
+      "state": "読み込み中",
+      "on": [
+        {
+          "event": "初期値の取得",
+          "branches": [
+            {
+              "case": "成功",
+              "process": "取得した値を各入力欄に表示する",
+              "to": "編集可能"
+            },
+            {
+              "case": "失敗",
+              "process": null,
+              "to": null,
+              "undefined": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "編集可能",
+      "on": [
+        {
+          "event": "入力値の変更",
+          "process": "変更の有無に応じて保存ボタンの操作可否を更新する",
+          "to": "編集可能",
+          "source": {
+            "element": "表示名"
+          }
+        },
+        {
+          "event": "保存の実行",
+          "branches": [
+            {
+              "case": "入力検証エラーあり",
+              "process": "該当要素にエラーを表示し、状態を変えない",
+              "to": "編集可能"
+            },
+            {
+              "case": "入力検証エラーなし",
+              "process": "保存処理を開始する",
+              "to": "保存中"
+            }
+          ],
+          "source": {
+            "element": "保存ボタン"
+          }
+        }
+      ]
+    },
+    {
+      "state": "保存中",
+      "on": [
+        {
+          "event": "保存結果の受信",
+          "branches": [
+            {
+              "case": "成功",
+              "process": "保存完了を通知する",
+              "to": "保存完了",
+              "message": "保存しました"
+            },
+            {
+              "case": "入力検証エラー",
+              "process": "該当要素にエラーを表示する",
+              "to": "編集可能"
+            },
+            {
+              "case": "更新の競合",
+              "process": "競合を通知し、最新取得を促す",
+              "to": "競合",
+              "message": "他の端末で更新されています。最新の内容を取得してください"
+            },
+            {
+              "case": "その他の失敗",
+              "process": "画面上部にエラーを通知する",
+              "to": "編集可能",
+              "message": "保存に失敗しました。時間をおいて再試行してください"
+            },
+            {
+              "case": "通信の失敗",
+              "process": "画面上部にエラーを通知する",
+              "to": "編集可能",
+              "message": "通信に失敗しました。時間をおいて再試行してください"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "保存完了",
+      "on": [
+        {
+          "event": "通知の時間経過",
+          "process": "完了通知を消す",
+          "to": "編集可能"
+        }
+      ]
+    },
+    {
+      "state": "競合",
+      "on": [
+        {
+          "event": "最新の取得",
+          "process": "画面を再読み込みして最新の値を取得する。編集中の入力内容は破棄される",
+          "to": "読み込み中",
+          "source": {
+            "container": "競合の通知",
+            "element": "最新を取得ボタン"
+          }
+        }
+      ]
+    }
+  ]
+}

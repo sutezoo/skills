@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0",
+  "type": "project-profile",
+  "title": "<プロジェクト名> プロジェクトプロファイル",
+  "status": "draft",
+  "updated": "<YYYY-MM-DD>",
+  "environment": {
+    "browsers": "<例: Chrome / Edge / Safari の最新2バージョン>",
+    "screenSizes": "<例: PC(1280px〜) / スマホ(375px〜)。レスポンシブ対応の有無>",
+    "i18n": "<例: 日本語のみ / 日本語+英語>",
+    "accessibility": "<例: WCAG 2.1 AA 準拠 / 特になし>",
+    "authz": "<例: ログイン必須。役割: 管理者・一般>",
+    "charset": "<例: DB・通信ともに UTF-8(utf8mb4)>"
+  },
+  "exclusions": [
+    {
+      "catalogId": "<除外する大分類または観点ID（例: A11Y 全体 / H-I18N-06）>",
+      "scope": "<除外範囲（例: 全画面）>",
+      "reason": "<除外理由（必須）>"
+    }
+  ],
+  "additionalViewpoints": [
+    {
+      "id": "<PRJ-01>",
+      "description": "<カタログに無いプロジェクト固有の必須観点>",
+      "check": "<確認内容>",
+      "reason": "<理由・出所（例: 過去のバグ傾向）>"
+    }
+  ],
+  "notes": [
+    "多言語非対応でも H-I18N-01〜04（絵文字・サロゲートペア・正規化・全角半角・異体字）は除外しないこと。日本語入力で日常的に発生する。",
+    "運用で見つかった観点漏れは、その場の修正で終わらせず exclusions の見直し or heuristics-catalog への追加で還元する。"
+  ]
+}
