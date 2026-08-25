@@ -136,11 +136,11 @@ kind は enum なので引き当ては表と1対1で決まる。
 | equivalenceClasses の class/boundary | `<viewpoint>-<classId/boundaryId>` | `T01-B03` |
 | decisionTables の rule | `<viewpoint>-<ruleId>` | `T04-R3` |
 | stateTransitions の transition | `<viewpoint>-<transitionId>` | `T05-TR08` |
-| displayChecks の 要素×状態 | `<viewpoint>-<element>-<state>` | `T06-保存ボタン-保存中` |
+| displayChecks の 要素×状態 | `<viewpoint>-<element>-<state>` | `T06-検索ボタン-検索中` |
 | 共通仕様ルール由来の観点 | `<viewpoint>-<ruleId>` | `T09-COM-003` |
 
 - 各ケースに precondition / input / operation / expected を埋める。`expected` は test-spec の expected/actions/message を転記。
-- **転記は痩せさせない**（`wording-rules.md`）。expected/precondition は観測可能・自己完結な文にする（「操作できること」「編集可能状態」で止めない）。ただし整形に使えるのは **spec と共通仕様に実在する事実だけ**（要素名・状態名・メッセージ文言・共通仕様の statement）。観測できる期待値そのものがどちらにも無いものは、ここで埋めず openIssues 由来として扱い、推測で書かない。
+- **転記は痩せさせない**（`wording-rules.md`）。expected/precondition は観測可能・自己完結な文にする（「操作できること」「表示中状態」で止めない）。ただし整形に使えるのは **spec と共通仕様に実在する事実だけ**（要素名・状態名・メッセージ文言・共通仕様の statement）。観測できる期待値そのものがどちらにも無いものは、ここで埋めず openIssues 由来として扱い、推測で書かない。
 - `result` は空（実行時に pass/fail/blocked を記入）。
 
 ### ✅ STEP2 完了条件
@@ -162,7 +162,7 @@ kind は enum なので引き当ては表と1対1で決まる。
 - **overrides を無視して共通仕様の期待値を使う**: 画面が overrides で逸脱を宣言しているルールは、期待値をその behavior にする。
 - **実装語の混入**: screen-spec が翻訳済みの言葉を使う。HTTPステータス番号・関数名を expected に書かない。
 - **test-spec に実行手順**: test-spec は導出規則まで。具体操作は test-items。
-- **痩せた期待値・前提条件**: 「操作できること」「編集可能状態」のような観測不能な表現で止めない（`wording-rules.md`）。ただし観測可能にするための事実が spec にも共通仕様にも無いなら、推測で具体化せず openIssues に回す。上の「spec を書き直す／推測で埋める」と同じ境界線。
+- **痩せた期待値・前提条件**: 「操作できること」「表示中状態」のような観測不能な表現で止めない（`wording-rules.md`）。ただし観測可能にするための事実が spec にも共通仕様にも無いなら、推測で具体化せず openIssues に回す。上の「spec を書き直す／推測で埋める」と同じ境界線。
 
 ## 用語（最小限）
 

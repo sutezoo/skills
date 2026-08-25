@@ -2,423 +2,77 @@
   "schemaVersion": "1.1",
   "specId": "SCR-030",
   "commonSpecRef": "example.common-spec.json",
-  "title": "プロフィール編集画面 テスト仕様書",
+  "title": "灯台検索画面 テスト仕様書",
   "type": "test-spec",
   "status": "draft",
   "scope": {
-    "in": [
-      "入力検証",
-      "保存処理の結果分岐",
-      "状態遷移",
-      "状態別の表示・操作",
-      "横断観点",
-      "共通仕様の遵守（overrides 含む）"
-    ],
-    "out": [
-      "プロフィール画像のアップロード（SCR-031で別途）"
-    ]
+    "in": ["フィルタの入力検証", "検索実行・検索結果受信の分岐", "状態遷移", "状態別の表示・操作", "横断観点", "共通仕様の遵守（overrides 含む）"],
+    "out": ["灯台詳細画面の表示内容（SCR-031で別途）", "灯台の登録・編集（SCR-020で別途）"]
   },
   "preconditions": {
     "environment": "ステージング、対応ブラウザ最新版",
-    "data": [
-      "有効な会員アカウント1件",
-      "メール重複検出用の別アカウント1件"
-    ],
+    "data": ["灯台レコード100件以上（名前・竣工日入り）", "名前に「観音埼」を含む灯台1件", "どのフィルタにも合致しない検索条件を作れるデータ構成"],
     "initialState": "読み込み中"
   },
   "viewpoints": [
-    {
-      "id": "T01",
-      "category": "入力値",
-      "description": "表示名の妥当性",
-      "technique": "同値分割+境界値",
-      "targets": [
-        "表示名"
-      ],
-      "catalogIds": []
-    },
-    {
-      "id": "T02",
-      "category": "入力値",
-      "description": "メールアドレスの妥当性",
-      "technique": "同値分割",
-      "targets": [
-        "メールアドレス"
-      ],
-      "catalogIds": []
-    },
-    {
-      "id": "T03",
-      "category": "入力値",
-      "description": "自己紹介の妥当性",
-      "technique": "同値分割+境界値",
-      "targets": [
-        "自己紹介"
-      ],
-      "catalogIds": []
-    },
-    {
-      "id": "T04",
-      "category": "業務ロジック",
-      "description": "保存結果の分岐",
-      "technique": "デシジョンテーブル",
-      "targets": [
-        "保存ボタン"
-      ],
-      "catalogIds": []
-    },
-    {
-      "id": "T05",
-      "category": "状態",
-      "description": "編集〜保存〜競合の状態遷移",
-      "technique": "状態遷移",
-      "targets": [
-        "画面全体"
-      ],
-      "catalogIds": []
-    },
-    {
-      "id": "T06",
-      "category": "UI制御",
-      "description": "状態別の要素表示・操作可否",
-      "technique": "状態別表示",
-      "targets": [
-        "保存ボタン",
-        "エラーバナー",
-        "保存完了の通知",
-        "競合の通知"
-      ],
-      "catalogIds": []
-    },
-    {
-      "id": "T07",
-      "category": "横断観点",
-      "description": "表示名・メール・自己紹介の文字種・特殊文字",
-      "technique": "同値分割",
-      "targets": [
-        "表示名",
-        "メールアドレス",
-        "自己紹介"
-      ],
-      "catalogIds": [
-        "H-STR-01〜09",
-        "H-I18N-01〜05",
-        "H-SEC-01/02/05"
-      ]
-    },
-    {
-      "id": "T08",
-      "category": "横断観点",
-      "description": "保存ボタンの二重送信・処理中の再操作（共通仕様 COM-003 の期待値: 更新系の処理中は起因となったボタンを操作不可にする）",
-      "technique": "単独確認",
-      "targets": [
-        "保存ボタン"
-      ],
-      "catalogIds": [
-        "H-NAV-01",
-        "H-CONC-05",
-        "PRJ-01",
-        "COM-003"
-      ]
-    },
-    {
-      "id": "T09",
-      "category": "横断観点",
-      "description": "戻る/リロード/直URLアクセス",
-      "technique": "単独確認",
-      "targets": [
-        "画面共通"
-      ],
-      "catalogIds": [
-        "H-NAV-02",
-        "H-NAV-03",
-        "H-NAV-04"
-      ]
-    },
-    {
-      "id": "T10",
-      "category": "横断観点",
-      "description": "通信失敗・タイムアウト・セッション切れ",
-      "technique": "単独確認",
-      "targets": [
-        "画面共通"
-      ],
-      "catalogIds": [
-        "H-NET-01",
-        "H-NET-02",
-        "H-NET-06"
-      ]
-    },
-    {
-      "id": "T11",
-      "category": "横断観点",
-      "description": "対応ブラウザ差・レスポンシブ・ズーム",
-      "technique": "単独確認",
-      "targets": [
-        "画面共通"
-      ],
-      "catalogIds": [
-        "H-ENV-01",
-        "H-ENV-02",
-        "H-ENV-03"
-      ]
-    },
-    {
-      "id": "T12",
-      "category": "共通仕様",
-      "description": "エラー表示方式。共通仕様 COM-002 からの逸脱（宣言済み）: 保存・通信の失敗は画面上部のエラーバナーで表示する",
-      "technique": "単独確認",
-      "targets": [
-        "エラーバナー"
-      ],
-      "catalogIds": [
-        "COM-002"
-      ]
-    },
-    {
-      "id": "T13",
-      "category": "共通仕様",
-      "description": "保存成功の通知（COM-005）: 「保存しました」と通知し、通知は3秒後に自動で消える",
-      "technique": "単独確認",
-      "targets": [
-        "保存完了の通知"
-      ],
-      "catalogIds": [
-        "COM-005"
-      ]
-    }
+    { "id": "T01", "category": "入力値", "description": "名前フィルタの妥当性", "technique": "同値分割+境界値", "targets": ["フィルタパネル/名前フィルタ"], "catalogIds": [] },
+    { "id": "T02", "category": "入力値", "description": "竣工日フィルタの妥当性", "technique": "同値分割", "targets": ["フィルタパネル/竣工日フィルタ"], "catalogIds": [] },
+    { "id": "T03", "category": "業務ロジック", "description": "検索実行の分岐（入力検証エラーの有無）", "technique": "デシジョンテーブル", "targets": ["フィルタパネル/検索ボタン"], "catalogIds": [] },
+    { "id": "T04", "category": "業務ロジック", "description": "検索結果受信の分岐（成功・失敗）", "technique": "デシジョンテーブル", "targets": ["検索結果一覧"], "catalogIds": [] },
+    { "id": "T05", "category": "状態", "description": "読み込み〜表示〜検索の状態遷移", "technique": "状態遷移", "targets": ["画面全体"], "catalogIds": [] },
+    { "id": "T06", "category": "UI制御", "description": "状態別の要素表示・操作可否", "technique": "状態別表示", "targets": ["検索ボタン", "検索結果一覧", "フィルタパネル", "全件数表示"], "catalogIds": [] },
+    { "id": "T07", "category": "共通仕様", "description": "検索結果一覧の0件表示。共通仕様 COM-004 からの逸脱（宣言済み）: 「該当する灯台がありません」と表示する", "technique": "単独確認", "targets": ["検索結果一覧"], "catalogIds": ["COM-004", "H-DISP-01"] },
+    { "id": "T08", "category": "横断観点", "description": "検索結果一覧の表示頑健性（1件・大量件数・長い灯台名・欠損データ）", "technique": "単独確認", "targets": ["検索結果一覧"], "catalogIds": ["H-DISP-02", "H-DISP-03", "H-DISP-04", "H-DISP-05"] },
+    { "id": "T09", "category": "横断観点", "description": "検索ボタンの二重実行・処理中の再操作（共通仕様 COM-003 の期待値: 検索・更新の処理中は起因となったボタンを操作不可にする）", "technique": "単独確認", "targets": ["フィルタパネル/検索ボタン"], "catalogIds": ["H-NAV-01", "H-CONC-05", "COM-003", "PRJ-01"] },
+    { "id": "T10", "category": "横断観点", "description": "戻る/リロード/直URLアクセス", "technique": "単独確認", "targets": ["画面共通"], "catalogIds": ["H-NAV-02", "H-NAV-03", "H-NAV-04"] },
+    { "id": "T11", "category": "横断観点", "description": "通信失敗・タイムアウト・セッション切れ", "technique": "単独確認", "targets": ["画面共通"], "catalogIds": ["H-NET-01", "H-NET-02", "H-NET-06"] },
+    { "id": "T12", "category": "横断観点", "description": "対応ブラウザ差・レスポンシブ・ズーム（フィルタパネルの開閉を含む）", "technique": "単独確認", "targets": ["画面共通", "フィルタパネル"], "catalogIds": ["H-ENV-01", "H-ENV-02", "H-ENV-03"] },
+    { "id": "T13", "category": "共通仕様", "description": "全件数の表示（COM-005）: 一覧の上部に条件に合致する全件数を「N件」の形式で表示する", "technique": "単独確認", "targets": ["全件数表示"], "catalogIds": ["COM-005"] },
+    { "id": "T14", "category": "共通仕様", "description": "竣工日の日付表示形式（COM-001）: 日付は「YYYY/MM/DD」形式で表示する", "technique": "単独確認", "targets": ["検索結果一覧"], "catalogIds": ["COM-001", "H-DISP-08"] }
   ],
   "equivalenceClasses": [
     {
       "viewpoint": "T01",
-      "element": "表示名",
+      "element": "名前フィルタ",
       "classes": [
-        {
-          "id": "EC-V01",
-          "kind": "valid",
-          "condition": "1〜50文字",
-          "expected": "受理"
-        },
-        {
-          "id": "EC-I01",
-          "kind": "invalid",
-          "condition": "未入力または空白のみ",
-          "expected": "表示名を入力してください"
-        },
-        {
-          "id": "EC-I02",
-          "kind": "invalid",
-          "condition": "50文字を超える",
-          "expected": "表示名は50文字以内で入力してください"
-        },
-        {
-          "id": "EC-I03",
-          "kind": "invalid",
-          "condition": "絵文字・サロゲートペアを含む",
-          "expected": "保存・表示・文字数カウントが壊れない",
-          "catalogId": "H-I18N-01"
-        },
-        {
-          "id": "EC-I04",
-          "kind": "invalid",
-          "condition": "前後に空白を含む",
-          "expected": "仕様どおりトリムして判定、または検証",
-          "catalogId": "H-STR-02"
-        },
-        {
-          "id": "EC-I05",
-          "kind": "invalid",
-          "condition": "HTMLタグ/スクリプト文字列を含む",
-          "expected": "再表示時にエスケープされる",
-          "catalogId": "H-SEC-01"
-        }
+        { "id": "EC-V01", "kind": "valid", "condition": "100文字以内（未入力は条件に含めない）", "expected": "受理して検索条件に含める" },
+        { "id": "EC-I01", "kind": "invalid", "condition": "100文字を超える", "expected": "名前は100文字以内で入力してください" },
+        { "id": "EC-I02", "kind": "invalid", "condition": "絵文字・サロゲートペア（𩸽 等）を含む", "expected": "検索・チップ表示・文字数カウントが壊れない", "catalogId": "H-I18N-01" },
+        { "id": "EC-I03", "kind": "invalid", "condition": "HTMLタグ/スクリプト文字列を含む", "expected": "チップ・検索結果の再表示時にエスケープされる", "catalogId": "H-SEC-01" },
+        { "id": "EC-I04", "kind": "invalid", "condition": "前後に空白を含む", "expected": "仕様どおりトリムして検索、またはそのまま検索条件になる", "catalogId": "H-STR-02" }
       ],
       "boundaries": [
-        {
-          "id": "B01",
-          "input": "0",
-          "kind": "下限直前",
-          "expected": "表示名を入力してください"
-        },
-        {
-          "id": "B02",
-          "input": "1",
-          "kind": "下限境界",
-          "expected": "受理"
-        },
-        {
-          "id": "B03",
-          "input": "50",
-          "kind": "上限境界",
-          "expected": "受理"
-        },
-        {
-          "id": "B04",
-          "input": "51",
-          "kind": "上限直後",
-          "expected": "表示名は50文字以内で入力してください"
-        }
+        { "id": "B01", "input": "100", "kind": "上限境界", "expected": "受理して検索条件に含める" },
+        { "id": "B02", "input": "101", "kind": "上限直後", "expected": "名前は100文字以内で入力してください" }
       ]
     },
     {
       "viewpoint": "T02",
-      "element": "メールアドレス",
+      "element": "竣工日フィルタ",
       "classes": [
-        {
-          "id": "EC-V02",
-          "kind": "valid",
-          "condition": "RFC準拠の形式",
-          "expected": "受理"
-        },
-        {
-          "id": "EC-I06",
-          "kind": "invalid",
-          "condition": "未入力",
-          "expected": "メールアドレスを入力してください"
-        },
-        {
-          "id": "EC-I07",
-          "kind": "invalid",
-          "condition": "形式が不正",
-          "expected": "メールアドレスの形式が正しくありません"
-        },
-        {
-          "id": "EC-I08",
-          "kind": "invalid",
-          "condition": "他の利用者と重複している",
-          "expected": "このメールアドレスは既に使用されています"
-        },
-        {
-          "id": "EC-I09",
-          "kind": "invalid",
-          "condition": "絵文字・全角英数を含む",
-          "expected": "形式エラー。文字種で壊れない",
-          "catalogId": "H-I18N-01"
-        },
-        {
-          "id": "EC-I12",
-          "kind": "invalid",
-          "condition": "254文字を超える",
-          "expected": "メールアドレスは254文字以内で入力してください"
-        }
-      ],
-      "boundaries": [
-        {
-          "id": "B07",
-          "input": "254",
-          "kind": "上限境界",
-          "expected": "受理"
-        },
-        {
-          "id": "B08",
-          "input": "255",
-          "kind": "上限直後",
-          "expected": "メールアドレスは254文字以内で入力してください"
-        }
-      ]
-    },
-    {
-      "viewpoint": "T03",
-      "element": "自己紹介",
-      "classes": [
-        {
-          "id": "EC-V03",
-          "kind": "valid",
-          "condition": "500文字以内",
-          "expected": "受理"
-        },
-        {
-          "id": "EC-I10",
-          "kind": "invalid",
-          "condition": "500文字を超える",
-          "expected": "自己紹介は500文字以内で入力してください"
-        },
-        {
-          "id": "EC-I11",
-          "kind": "invalid",
-          "condition": "改行・絵文字を多数含む長文",
-          "expected": "保存・表示・カウントが壊れない（長文レイアウト）",
-          "catalogId": "H-DISP-03"
-        }
-      ],
-      "boundaries": [
-        {
-          "id": "B05",
-          "input": "500",
-          "kind": "上限境界",
-          "expected": "受理"
-        },
-        {
-          "id": "B06",
-          "input": "501",
-          "kind": "上限直後",
-          "expected": "自己紹介は500文字以内で入力してください"
-        }
+        { "id": "EC-V02", "kind": "valid", "condition": "存在する日付", "expected": "受理して検索条件に含める" },
+        { "id": "EC-I05", "kind": "invalid", "condition": "存在しない日付（2月30日など）", "expected": "竣工日は正しい日付で入力してください" },
+        { "id": "EC-I06", "kind": "invalid", "condition": "平年の2月29日", "expected": "竣工日は正しい日付で入力してください", "catalogId": "H-DATE-02" }
       ]
     }
   ],
   "decisionTables": [
     {
-      "viewpoint": "T04",
-      "name": "保存中での保存結果の受信",
-      "conditions": [
-        "結果"
-      ],
+      "viewpoint": "T03",
+      "name": "表示中での検索の実行",
+      "conditions": ["入力検証エラーあり"],
       "rules": [
-        {
-          "id": "R1",
-          "values": {
-            "成功": "T"
-          },
-          "actions": [
-            "保存完了を通知する",
-            "→ 保存完了"
-          ],
-          "message": "保存しました"
-        },
-        {
-          "id": "R2",
-          "values": {
-            "入力検証エラー": "T"
-          },
-          "actions": [
-            "該当要素にエラーを表示する",
-            "→ 編集可能"
-          ]
-        },
-        {
-          "id": "R3",
-          "values": {
-            "更新の競合": "T"
-          },
-          "actions": [
-            "競合を通知し最新取得を促す",
-            "→ 競合"
-          ],
-          "message": "他の端末で更新されています。最新の内容を取得してください"
-        },
-        {
-          "id": "R4",
-          "values": {
-            "その他の失敗": "T"
-          },
-          "actions": [
-            "画面上部にエラーを通知する",
-            "→ 編集可能"
-          ],
-          "message": "保存に失敗しました。時間をおいて再試行してください"
-        },
-        {
-          "id": "R5",
-          "values": {
-            "通信の失敗": "T"
-          },
-          "actions": [
-            "画面上部にエラーを通知する",
-            "→ 編集可能"
-          ],
-          "message": "通信に失敗しました。時間をおいて再試行してください"
-        }
+        { "id": "R1", "values": { "入力検証エラーあり": "T" }, "actions": ["該当要素にエラーを表示し、状態を変えない", "→ 表示中"] },
+        { "id": "R2", "values": { "入力検証エラーあり": "F" }, "actions": ["検索を開始し、適用中のフィルタをチップで表示する", "→ 検索中"] }
+      ]
+    },
+    {
+      "viewpoint": "T04",
+      "name": "検索中での検索結果の受信",
+      "conditions": ["結果"],
+      "rules": [
+        { "id": "R1", "values": { "成功": "T" }, "actions": ["検索結果一覧と全件数を更新する", "→ 表示中"] },
+        { "id": "R2", "values": { "失敗": "T" }, "actions": ["エラーを通知する", "→ 表示中"], "message": "検索に失敗しました。時間をおいて再試行してください" }
       ]
     }
   ],
@@ -426,299 +80,76 @@
     {
       "viewpoint": "T05",
       "transitions": [
-        {
-          "id": "TR01",
-          "from": "読み込み中",
-          "event": "初期値の取得",
-          "to": "編集可能",
-          "process": "取得した値を各入力欄に表示する",
-          "note": "成功時"
-        },
-        {
-          "id": "TR02",
-          "from": "編集可能",
-          "event": "入力値の変更",
-          "to": "編集可能",
-          "process": "保存ボタンの操作可否を更新する"
-        },
-        {
-          "id": "TR03",
-          "from": "編集可能",
-          "event": "保存の実行",
-          "to": "保存中",
-          "process": "保存処理を開始する",
-          "note": "入力検証エラーなし"
-        },
-        {
-          "id": "TR04",
-          "from": "編集可能",
-          "event": "保存の実行",
-          "to": "編集可能",
-          "process": "該当要素にエラーを表示",
-          "note": "入力検証エラーあり"
-        },
-        {
-          "id": "TR05",
-          "from": "保存中",
-          "event": "保存結果の受信",
-          "to": "保存完了",
-          "process": "完了通知",
-          "note": "成功"
-        },
-        {
-          "id": "TR06",
-          "from": "保存中",
-          "event": "保存結果の受信",
-          "to": "競合",
-          "process": "競合通知",
-          "note": "更新競合"
-        },
-        {
-          "id": "TR07",
-          "from": "保存完了",
-          "event": "通知の時間経過",
-          "to": "編集可能",
-          "process": "完了通知を消す"
-        },
-        {
-          "id": "TR08",
-          "from": "競合",
-          "event": "最新の取得",
-          "to": "読み込み中",
-          "process": "再読み込み。編集内容は破棄"
-        },
-        {
-          "id": "TR09",
-          "from": "保存完了",
-          "event": "入力値の変更",
-          "to": "編集可能",
-          "process": "完了通知を消し、保存ボタンの操作可否を更新する"
-        },
-        {
-          "id": "TR10",
-          "from": "競合",
-          "event": "入力値の変更",
-          "to": "競合",
-          "process": "保存ボタンの操作可否を更新する"
-        }
+        { "id": "TR01", "from": "読み込み中", "event": "初期表示の取得", "to": "表示中", "process": "全件数と検索結果の初期表示を表示する", "note": "成功時" },
+        { "id": "TR02", "from": "表示中", "event": "フィルタの開閉", "to": "表示中", "process": "フィルタパネルの表示・非表示を切り替える" },
+        { "id": "TR03", "from": "表示中", "event": "フィルタ入力の変更", "to": "表示中", "process": "入力値を検索条件として保持する（検索は実行しない）" },
+        { "id": "TR04", "from": "表示中", "event": "検索の実行", "to": "表示中", "process": "該当要素にエラーを表示", "note": "入力検証エラーあり" },
+        { "id": "TR05", "from": "表示中", "event": "検索の実行", "to": "検索中", "process": "検索を開始し、適用中フィルタをチップで表示", "note": "入力検証エラーなし" },
+        { "id": "TR06", "from": "表示中", "event": "表示切替", "to": "表示中", "process": "表示形式（一覧・カード）を切り替える。検索条件と結果は変えない" },
+        { "id": "TR07", "from": "表示中", "event": "検索結果の選択", "to": null, "process": "選択した灯台の詳細画面に遷移する", "note": "画面を離れる" },
+        { "id": "TR08", "from": "検索中", "event": "フィルタの開閉", "to": "検索中", "process": "フィルタパネルの表示・非表示を切り替える。実行中の検索には影響しない" },
+        { "id": "TR09", "from": "検索中", "event": "検索結果の受信", "to": "表示中", "process": "検索結果一覧と全件数を更新", "note": "成功" },
+        { "id": "TR10", "from": "検索中", "event": "検索結果の受信", "to": "表示中", "process": "エラーをトーストで通知", "note": "失敗" }
       ]
     }
   ],
   "displayChecks": [
     {
       "viewpoint": "T06",
-      "element": "保存ボタン",
+      "element": "検索ボタン",
       "byState": [
-        {
-          "state": "読み込み中",
-          "visibility": "hidden"
-        },
-        {
-          "state": "編集可能",
-          "visibility": "conditional",
-          "condition": "入力内容に変更があるときのみ"
-        },
-        {
-          "state": "保存中",
-          "visibility": "visible"
-        },
-        {
-          "state": "保存完了",
-          "visibility": "conditional",
-          "condition": "入力内容に変更があるときのみ"
-        },
-        {
-          "state": "競合",
-          "visibility": "conditional",
-          "condition": "入力内容に変更があるときのみ"
-        }
+        { "state": "読み込み中", "visibility": "visible" },
+        { "state": "表示中", "visibility": "operable" },
+        { "state": "検索中", "visibility": "visible" }
       ]
     },
     {
       "viewpoint": "T06",
-      "element": "競合の通知",
+      "element": "検索結果一覧",
       "byState": [
-        {
-          "state": "読み込み中",
-          "visibility": "hidden"
-        },
-        {
-          "state": "編集可能",
-          "visibility": "hidden"
-        },
-        {
-          "state": "保存中",
-          "visibility": "hidden"
-        },
-        {
-          "state": "保存完了",
-          "visibility": "hidden"
-        },
-        {
-          "state": "競合",
-          "visibility": "visible"
-        }
+        { "state": "読み込み中", "visibility": "hidden" },
+        { "state": "表示中", "visibility": "operable" },
+        { "state": "検索中", "visibility": "visible" }
+      ]
+    },
+    {
+      "viewpoint": "T06",
+      "element": "フィルタパネル",
+      "byState": [
+        { "state": "読み込み中", "visibility": "visible" },
+        { "state": "表示中", "visibility": "conditional", "condition": "開閉ボタンで開いているときのみ" },
+        { "state": "検索中", "visibility": "conditional", "condition": "開閉ボタンで開いているときのみ" }
       ]
     }
   ],
   "crossCuttingCoverage": [
-    {
-      "target": "表示名",
-      "kind": "テキスト入力",
-      "catalogId": "H-STR-01〜09",
-      "status": "applied",
-      "coveredBy": "T07 / T01の無効クラス EC-I03〜05"
-    },
-    {
-      "target": "表示名",
-      "kind": "テキスト入力",
-      "catalogId": "H-I18N-01〜05",
-      "status": "applied",
-      "coveredBy": "T07 / EC-I03"
-    },
-    {
-      "target": "メールアドレス",
-      "kind": "テキスト入力",
-      "catalogId": "H-SEC-01/02/05",
-      "status": "applied",
-      "coveredBy": "T07 / EC-I09"
-    },
-    {
-      "target": "自己紹介",
-      "kind": "テキストエリア",
-      "catalogId": "H-DISP-03",
-      "status": "applied",
-      "coveredBy": "T03 EC-I11"
-    },
-    {
-      "target": "保存ボタン",
-      "kind": "ボタン",
-      "catalogId": "H-NAV-01",
-      "status": "applied",
-      "coveredBy": "T08"
-    },
-    {
-      "target": "保存ボタン",
-      "kind": "ボタン",
-      "catalogId": "H-CONC-05",
-      "status": "applied",
-      "coveredBy": "T08"
-    },
-    {
-      "target": "保存ボタン",
-      "kind": "ボタン",
-      "catalogId": "H-NET-01/02/06",
-      "status": "applied",
-      "coveredBy": "T10"
-    },
-    {
-      "target": "画面共通",
-      "kind": "画面全体",
-      "catalogId": "H-NAV-02/03/04",
-      "status": "applied",
-      "coveredBy": "T09"
-    },
-    {
-      "target": "画面共通",
-      "kind": "画面全体",
-      "catalogId": "H-ENV-01/02/03",
-      "status": "applied",
-      "coveredBy": "T11"
-    },
-    {
-      "target": "画面共通",
-      "kind": "画面全体",
-      "catalogId": "H-CONC-01",
-      "status": "applied",
-      "coveredBy": "T05 競合遷移(TR06/TR08)で確認"
-    },
-    {
-      "target": "画面共通",
-      "kind": "画面全体",
-      "catalogId": "H-ENV-05",
-      "status": "excluded",
-      "reason": "project-profile: ダークモード非提供"
-    },
-    {
-      "target": "画面共通",
-      "kind": "画面全体",
-      "catalogId": "H-A11Y-01〜05",
-      "status": "excluded",
-      "reason": "project-profile: アクセシビリティ要件スコープ外"
-    },
-    {
-      "target": "画面共通",
-      "kind": "画面全体",
-      "catalogId": "H-I18N-06",
-      "status": "excluded",
-      "reason": "project-profile: 多言語非対応（RTL対象外）"
-    },
-    {
-      "target": "（一覧表示）",
-      "kind": "一覧・テーブル",
-      "catalogId": "H-DISP-01/02/06/07",
-      "status": "n_a",
-      "reason": "この画面に一覧表示なし"
-    },
-    {
-      "target": "（日付入力）",
-      "kind": "日付・時刻",
-      "catalogId": "H-DATE-01〜07",
-      "status": "n_a",
-      "reason": "日付入力項目なし"
-    },
-    {
-      "target": "（ファイル）",
-      "kind": "ファイル",
-      "catalogId": "H-FILE-01〜05",
-      "status": "n_a",
-      "reason": "この画面にファイル入力なし（SCR-031で扱う）"
-    },
-    {
-      "target": "エラーバナー",
-      "kind": "バナー",
-      "catalogId": "COM-002",
-      "status": "applied",
-      "coveredBy": "T12（overrides 宣言によりバナー表示が期待値）"
-    },
-    {
-      "target": "保存ボタン",
-      "kind": "ボタン",
-      "catalogId": "COM-003",
-      "status": "applied",
-      "coveredBy": "T08 / T06-保存ボタン-保存中（保存中は操作不可）"
-    },
-    {
-      "target": "保存完了の通知",
-      "kind": "トースト",
-      "catalogId": "COM-005",
-      "status": "applied",
-      "coveredBy": "T13 / T04 R1 / TR07"
-    },
-    {
-      "target": "（日付表示）",
-      "kind": "表示テキスト",
-      "catalogId": "COM-001",
-      "status": "n_a",
-      "reason": "この画面に日付の表示・入力なし"
-    },
-    {
-      "target": "（一覧表示）",
-      "kind": "一覧",
-      "catalogId": "COM-004",
-      "status": "n_a",
-      "reason": "この画面に一覧なし"
-    }
+    { "target": "名前フィルタ", "kind": "テキスト入力", "catalogId": "H-STR-01〜09", "status": "applied", "coveredBy": "T01 の無効クラス EC-I01/I04（残りは検索条件として受理されることを EC-V01 で確認）" },
+    { "target": "名前フィルタ", "kind": "テキスト入力", "catalogId": "H-I18N-01〜05", "status": "applied", "coveredBy": "T01 EC-I02" },
+    { "target": "名前フィルタ", "kind": "テキスト入力", "catalogId": "H-SEC-01/02/05", "status": "applied", "coveredBy": "T01 EC-I03" },
+    { "target": "竣工日フィルタ", "kind": "日付入力", "catalogId": "H-DATE-01〜07", "status": "applied", "coveredBy": "T02 EC-I05/I06" },
+    { "target": "検索結果一覧", "kind": "一覧", "catalogId": "H-DISP-01", "status": "applied", "coveredBy": "T07（期待値は spec の emptyBehavior = overrides COM-004）" },
+    { "target": "検索結果一覧", "kind": "一覧", "catalogId": "H-DISP-02〜05", "status": "applied", "coveredBy": "T08" },
+    { "target": "検索結果一覧", "kind": "一覧", "catalogId": "H-DISP-06/07", "status": "n_a", "reason": "この画面の一覧はページング・ソート操作を持たない" },
+    { "target": "検索ボタン", "kind": "ボタン", "catalogId": "H-NAV-01", "status": "applied", "coveredBy": "T09" },
+    { "target": "検索ボタン", "kind": "ボタン", "catalogId": "H-CONC-05", "status": "applied", "coveredBy": "T09 / T06-検索ボタン-検索中（検索中は操作不可）" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-NAV-02/03/04", "status": "applied", "coveredBy": "T10" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-NET-01/02/06", "status": "applied", "coveredBy": "T11 / T04 R2" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-ENV-01/02/03", "status": "applied", "coveredBy": "T12" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-CONC-01/02", "status": "n_a", "reason": "この画面は検索のみでデータを更新しないため、同時編集・編集中削除は対象外" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-ENV-05", "status": "excluded", "reason": "project-profile: ダークモード非提供" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-A11Y-01〜05", "status": "excluded", "reason": "project-profile: アクセシビリティ要件スコープ外" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-I18N-06", "status": "excluded", "reason": "project-profile: 多言語非対応（RTL対象外）" },
+    { "target": "（数値入力）", "kind": "数値入力", "catalogId": "H-NUM-01〜06", "status": "n_a", "reason": "この画面に数値入力項目なし" },
+    { "target": "（ファイル）", "kind": "ファイル入力", "catalogId": "H-FILE-01〜05", "status": "n_a", "reason": "この画面にファイル入力なし" },
+    { "target": "検索結果一覧", "kind": "一覧", "catalogId": "COM-001", "status": "applied", "coveredBy": "T14（竣工日の表示形式）" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "COM-002", "status": "applied", "coveredBy": "T04 R2（検索失敗時のトースト表示）/ T11" },
+    { "target": "検索ボタン", "kind": "ボタン", "catalogId": "COM-003", "status": "applied", "coveredBy": "T09 / T06-検索ボタン-検索中" },
+    { "target": "検索結果一覧", "kind": "一覧", "catalogId": "COM-004", "status": "applied", "coveredBy": "T07（overrides 宣言により「該当する灯台がありません」が期待値）" },
+    { "target": "全件数表示", "kind": "表示テキスト", "catalogId": "COM-005", "status": "applied", "coveredBy": "T13" }
   ],
   "scenarios": [],
   "openIssues": [
-    {
-      "ref": "読み込み中 / 初期値の取得 / 失敗",
-      "note": "初期値取得が失敗したときの挙動が spec で undefined。確定後に遷移とエラー表示の観点を起こす。"
-    },
-    {
-      "ref": "競合 / 保存の実行",
-      "note": "競合中に保存を実行したときの挙動が spec で undefined。確定後にデシジョンテーブルまたは遷移の観点を起こす。"
-    }
+    { "ref": "読み込み中 / 初期表示の取得 / 失敗", "note": "初期表示の取得が失敗したときの挙動が spec で undefined。確定後に遷移とエラー表示の観点を起こす。" },
+    { "ref": "検索中 / 表示切替", "note": "検索中に表示切替を押したときの挙動が spec で undefined。確定後に遷移または表示の観点を起こす。" }
   ]
 }

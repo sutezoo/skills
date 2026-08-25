@@ -1,15 +1,15 @@
 {
   "schemaVersion": "2.0",
   "id": "SCR-030",
-  "title": "プロフィール編集画面",
+  "title": "灯台検索画面",
   "type": "screen",
   "status": "draft",
   "commonSpec": "example.common-spec.json",
   "overrides": [
     {
-      "rule": "COM-002",
-      "behavior": "保存・通信の失敗は画面上部のエラーバナーで表示する",
-      "reason": "編集中の入力内容の近くで気づけるよう、この画面はトーストではなくバナーで表示する"
+      "rule": "COM-004",
+      "behavior": "検索結果一覧はデータ0件のとき「該当する灯台がありません」と表示する",
+      "reason": "検索対象が灯台であることが利用者に分かる文言にするため"
     }
   ],
   "layout": {
@@ -18,334 +18,240 @@
   "navigation": {
     "entryPoints": [
       {
-        "from": "SCR-001",
-        "trigger": "グローバルメニューの「プロフィール編集」を選択"
+        "from": "SCR-010",
+        "trigger": "グローバルメニューの「検索」を選択"
       }
     ],
-    "exitPoints": []
+    "exitPoints": [
+      {
+        "to": "SCR-031",
+        "trigger": "検索結果の灯台を選択"
+      }
+    ]
   },
   "states": [
     {
       "name": "読み込み中",
       "initial": true,
-      "description": "初期値を取得している。入力欄は表示しない"
+      "description": "画面表示時の初期表示（全件数と検索結果）を取得している"
     },
     {
-      "name": "編集可能",
-      "description": "値を表示し、編集・保存できる"
+      "name": "表示中",
+      "description": "検索結果と全件数を表示し、フィルタの入力・検索・表示切替ができる"
     },
     {
-      "name": "保存中",
-      "description": "保存処理の完了を待っている。入力欄は編集できない"
-    },
-    {
-      "name": "保存完了",
-      "description": "保存に成功し、完了を通知している"
-    },
-    {
-      "name": "競合",
-      "description": "他の更新と競合し、最新の取得を促している"
+      "name": "検索中",
+      "description": "検索処理の完了を待っている。フィルタ入力と検索は操作できない"
     }
   ],
   "events": [
     {
-      "name": "初期値の取得",
-      "description": "画面表示時に初期値の取得を試みる"
+      "name": "初期表示の取得",
+      "description": "画面表示時に全件数と検索結果の初期表示の取得を試みる"
     },
     {
-      "name": "入力値の変更",
-      "description": "いずれかの入力欄の値が変わる"
+      "name": "フィルタの開閉",
+      "description": "開閉ボタンを押す"
     },
     {
-      "name": "保存の実行",
-      "description": "保存ボタンを押す"
+      "name": "フィルタ入力の変更",
+      "description": "フィルタパネル内のいずれかの入力値が変わる"
     },
     {
-      "name": "保存結果の受信",
-      "description": "保存処理の応答が返る"
+      "name": "検索の実行",
+      "description": "検索ボタンを押す"
     },
     {
-      "name": "通知の時間経過",
-      "description": "保存完了通知の表示から3秒経過する"
+      "name": "検索結果の受信",
+      "description": "検索処理の応答が返る"
     },
     {
-      "name": "最新の取得",
-      "description": "競合通知内の取得操作を行う"
+      "name": "表示切替",
+      "description": "表示切替ボタンを押す"
+    },
+    {
+      "name": "検索結果の選択",
+      "description": "検索結果一覧のいずれかの灯台を選択する"
     }
   ],
   "elements": [
     {
-      "name": "表示名",
-      "kind": "テキスト入力",
-      "required": true,
-      "dataRef": {
-        "table": "利用者",
-        "column": "表示名"
-      },
-      "constraints": {
-        "minLength": 1,
-        "maxLength": 50,
-        "blankOnly": false
-      },
-      "validations": [
-        {
-          "condition": "未入力または空白のみ",
-          "message": "表示名を入力してください"
-        },
-        {
-          "condition": "50文字を超える",
-          "message": "表示名は50文字以内で入力してください"
-        }
-      ],
-      "displayByState": {
-        "読み込み中": {
-          "visibility": "hidden"
-        },
-        "編集可能": {
-          "visibility": "operable"
-        },
-        "保存中": {
-          "visibility": "visible"
-        },
-        "保存完了": {
-          "visibility": "operable"
-        },
-        "競合": {
-          "visibility": "operable"
-        }
-      }
-    },
-    {
-      "name": "メールアドレス",
-      "kind": "テキスト入力",
-      "required": true,
-      "dataRef": {
-        "table": "利用者",
-        "column": "メールアドレス"
-      },
-      "constraints": {
-        "maxLength": 254,
-        "format": "email"
-      },
-      "validations": [
-        {
-          "condition": "未入力",
-          "message": "メールアドレスを入力してください"
-        },
-        {
-          "condition": "形式が不正",
-          "message": "メールアドレスの形式が正しくありません"
-        },
-        {
-          "condition": "254文字を超える",
-          "message": "メールアドレスは254文字以内で入力してください"
-        },
-        {
-          "condition": "他の利用者と重複している",
-          "message": "このメールアドレスは既に使用されています"
-        }
-      ],
-      "displayByState": {
-        "読み込み中": {
-          "visibility": "hidden"
-        },
-        "編集可能": {
-          "visibility": "operable"
-        },
-        "保存中": {
-          "visibility": "visible"
-        },
-        "保存完了": {
-          "visibility": "operable"
-        },
-        "競合": {
-          "visibility": "operable"
-        }
-      }
-    },
-    {
-      "name": "自己紹介",
-      "kind": "テキストエリア",
-      "dataRef": {
-        "table": "利用者",
-        "column": "自己紹介"
-      },
-      "constraints": {
-        "maxLength": 500
-      },
-      "validations": [
-        {
-          "condition": "500文字を超える",
-          "message": "自己紹介は500文字以内で入力してください"
-        }
-      ],
-      "displayByState": {
-        "読み込み中": {
-          "visibility": "hidden"
-        },
-        "編集可能": {
-          "visibility": "operable"
-        },
-        "保存中": {
-          "visibility": "visible"
-        },
-        "保存完了": {
-          "visibility": "operable"
-        },
-        "競合": {
-          "visibility": "operable"
-        }
-      }
-    },
-    {
-      "name": "文字数カウンタ",
-      "kind": "表示テキスト",
-      "description": "自己紹介の入力文字数を「現在数 / 500」で表示する",
-      "displayByState": {
-        "読み込み中": {
-          "visibility": "hidden"
-        },
-        "編集可能": {
-          "visibility": "visible"
-        },
-        "保存中": {
-          "visibility": "visible"
-        },
-        "保存完了": {
-          "visibility": "visible"
-        },
-        "競合": {
-          "visibility": "visible"
-        }
-      }
-    },
-    {
-      "name": "保存ボタン",
+      "name": "開閉ボタン",
       "kind": "ボタン",
+      "description": "フィルタパネルの表示・非表示を切り替える",
       "displayByState": {
         "読み込み中": {
-          "visibility": "hidden"
-        },
-        "編集可能": {
-          "visibility": "conditional",
-          "condition": "入力内容に変更があるときのみ"
-        },
-        "保存中": {
           "visibility": "visible"
         },
-        "保存完了": {
-          "visibility": "conditional",
-          "condition": "入力内容に変更があるときのみ"
+        "表示中": {
+          "visibility": "operable"
         },
-        "競合": {
-          "visibility": "conditional",
-          "condition": "入力内容に変更があるときのみ"
+        "検索中": {
+          "visibility": "operable"
         }
       }
     },
     {
-      "name": "エラーバナー",
-      "kind": "バナー",
+      "name": "適用中フィルタ表示",
+      "kind": "表示テキスト",
+      "description": "適用中のフィルタをチップで表示する。適用中フィルタが無いときは何も表示しない",
       "displayByState": {
         "読み込み中": {
           "visibility": "hidden"
         },
-        "編集可能": {
+        "表示中": {
+          "visibility": "visible"
+        },
+        "検索中": {
+          "visibility": "visible"
+        }
+      }
+    },
+    {
+      "name": "全件数表示",
+      "kind": "表示テキスト",
+      "description": "検索条件に合致する灯台の全件数を「N件」の形式で表示する",
+      "dataRef": {
+        "table": "灯台",
+        "note": "検索条件に合致する件数の集計"
+      },
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "表示中": {
+          "visibility": "visible"
+        },
+        "検索中": {
+          "visibility": "visible"
+        }
+      }
+    },
+    {
+      "name": "表示切替ボタン",
+      "kind": "ボタン",
+      "description": "検索結果の表示形式（一覧・カード）を切り替える",
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "visible"
+        },
+        "表示中": {
+          "visibility": "operable"
+        },
+        "検索中": {
+          "visibility": "operable"
+        }
+      }
+    },
+    {
+      "name": "検索結果一覧",
+      "kind": "一覧",
+      "description": "検索条件に合致する灯台の一覧。選択で灯台詳細画面に遷移する",
+      "emptyBehavior": "データ0件のとき「該当する灯台がありません」と表示する",
+      "dataRef": {
+        "table": "灯台",
+        "note": "検索結果の一覧表示（名前・竣工日など）"
+      },
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "hidden"
+        },
+        "表示中": {
+          "visibility": "operable"
+        },
+        "検索中": {
+          "visibility": "visible"
+        }
+      }
+    },
+    {
+      "name": "フィルタパネル",
+      "kind": "パネル",
+      "description": "名前や竣工日などのフィルタをまとめる領域。開閉ボタンで表示・非表示を切り替える",
+      "displayByState": {
+        "読み込み中": {
+          "visibility": "visible"
+        },
+        "表示中": {
           "visibility": "conditional",
-          "condition": "保存・通信に失敗したとき"
+          "condition": "開閉ボタンで開いているときのみ"
         },
-        "保存中": {
-          "visibility": "hidden"
-        },
-        "保存完了": {
-          "visibility": "hidden"
-        },
-        "競合": {
-          "visibility": "hidden"
-        }
-      }
-    },
-    {
-      "name": "保存完了の通知",
-      "kind": "トースト",
-      "displayByState": {
-        "読み込み中": {
-          "visibility": "hidden"
-        },
-        "編集可能": {
-          "visibility": "hidden"
-        },
-        "保存中": {
-          "visibility": "hidden"
-        },
-        "保存完了": {
-          "visibility": "visible"
-        },
-        "競合": {
-          "visibility": "hidden"
-        }
-      }
-    },
-    {
-      "name": "競合の通知",
-      "kind": "バナー",
-      "displayByState": {
-        "読み込み中": {
-          "visibility": "hidden"
-        },
-        "編集可能": {
-          "visibility": "hidden"
-        },
-        "保存中": {
-          "visibility": "hidden"
-        },
-        "保存完了": {
-          "visibility": "hidden"
-        },
-        "競合": {
-          "visibility": "visible"
+        "検索中": {
+          "visibility": "conditional",
+          "condition": "開閉ボタンで開いているときのみ"
         }
       },
       "children": [
         {
-          "name": "競合メッセージ",
-          "kind": "表示テキスト",
+          "name": "名前フィルタ",
+          "kind": "テキスト入力",
+          "description": "灯台の名前による絞り込み。部分一致で検索する",
+          "dataRef": {
+            "table": "灯台",
+            "column": "名前",
+            "note": "検索条件（部分一致）"
+          },
+          "constraints": {
+            "maxLength": 100
+          },
+          "validations": [
+            {
+              "condition": "100文字を超える",
+              "message": "名前は100文字以内で入力してください"
+            }
+          ],
           "displayByState": {
             "読み込み中": {
-              "visibility": "hidden"
+              "visibility": "visible"
             },
-            "編集可能": {
-              "visibility": "hidden"
+            "表示中": {
+              "visibility": "operable"
             },
-            "保存中": {
-              "visibility": "hidden"
-            },
-            "保存完了": {
-              "visibility": "hidden"
-            },
-            "競合": {
+            "検索中": {
               "visibility": "visible"
             }
           }
         },
         {
-          "name": "最新を取得ボタン",
-          "kind": "ボタン",
+          "name": "竣工日フィルタ",
+          "kind": "日付入力",
+          "description": "竣工日による絞り込み",
+          "dataRef": {
+            "table": "灯台",
+            "column": "竣工日",
+            "note": "検索条件"
+          },
+          "validations": [
+            {
+              "condition": "存在しない日付",
+              "message": "竣工日は正しい日付で入力してください"
+            }
+          ],
           "displayByState": {
             "読み込み中": {
-              "visibility": "hidden"
+              "visibility": "visible"
             },
-            "編集可能": {
-              "visibility": "hidden"
-            },
-            "保存中": {
-              "visibility": "hidden"
-            },
-            "保存完了": {
-              "visibility": "hidden"
-            },
-            "競合": {
+            "表示中": {
               "visibility": "operable"
+            },
+            "検索中": {
+              "visibility": "visible"
+            }
+          }
+        },
+        {
+          "name": "検索ボタン",
+          "kind": "ボタン",
+          "description": "入力したフィルタで検索を実行する",
+          "displayByState": {
+            "読み込み中": {
+              "visibility": "visible"
+            },
+            "表示中": {
+              "visibility": "operable"
+            },
+            "検索中": {
+              "visibility": "visible"
             }
           }
         }
@@ -357,12 +263,12 @@
       "state": "読み込み中",
       "on": [
         {
-          "event": "初期値の取得",
+          "event": "初期表示の取得",
           "branches": [
             {
               "case": "成功",
-              "process": "取得した値を各入力欄に表示する",
-              "to": "編集可能"
+              "process": "全件数と検索結果の初期表示を表示する",
+              "to": "表示中"
             },
             {
               "case": "失敗",
@@ -371,246 +277,168 @@
           ]
         },
         {
-          "event": "入力値の変更",
+          "event": "フィルタの開閉",
           "notApplicable": {
-            "reason": "この状態では入力欄が非表示のため発生しない"
+            "reason": "この状態では開閉ボタンが表示のみで押せないため発生しない"
           }
         },
         {
-          "event": "保存の実行",
+          "event": "フィルタ入力の変更",
           "notApplicable": {
-            "reason": "この状態では保存ボタンが非表示のため発生しない"
+            "reason": "この状態ではフィルタの入力欄が表示のみで編集できないため発生しない"
           }
         },
         {
-          "event": "保存結果の受信",
+          "event": "検索の実行",
           "notApplicable": {
-            "reason": "保存処理が開始されていないため発生しない"
+            "reason": "この状態では検索ボタンが表示のみで押せないため発生しない"
           }
         },
         {
-          "event": "通知の時間経過",
+          "event": "検索結果の受信",
           "notApplicable": {
-            "reason": "保存完了の通知が表示されていないため発生しない"
+            "reason": "検索処理が開始されていないため発生しない"
           }
         },
         {
-          "event": "最新の取得",
+          "event": "表示切替",
           "notApplicable": {
-            "reason": "競合の通知が非表示のため発生しない"
+            "reason": "この状態では表示切替ボタンが表示のみで押せないため発生しない"
+          }
+        },
+        {
+          "event": "検索結果の選択",
+          "notApplicable": {
+            "reason": "この状態では検索結果一覧が非表示のため発生しない"
           }
         }
       ]
     },
     {
-      "state": "編集可能",
+      "state": "表示中",
       "on": [
         {
-          "event": "初期値の取得",
+          "event": "初期表示の取得",
           "notApplicable": {
-            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
+            "reason": "初期表示の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
           }
         },
         {
-          "event": "入力値の変更",
-          "process": "変更の有無に応じて保存ボタンの操作可否を更新する",
-          "to": "編集可能",
+          "event": "フィルタの開閉",
+          "process": "フィルタパネルの表示・非表示を切り替える",
+          "to": "表示中",
           "source": {
-            "element": "表示名"
+            "element": "開閉ボタン"
           }
         },
         {
-          "event": "保存の実行",
+          "event": "フィルタ入力の変更",
+          "process": "入力値を検索条件として保持する。検索はまだ実行しない",
+          "to": "表示中",
+          "source": {
+            "container": "フィルタパネル",
+            "element": "名前フィルタ"
+          }
+        },
+        {
+          "event": "検索の実行",
           "branches": [
             {
               "case": "入力検証エラーあり",
               "process": "該当要素にエラーを表示し、状態を変えない",
-              "to": "編集可能"
+              "to": "表示中"
             },
             {
               "case": "入力検証エラーなし",
-              "process": "保存処理を開始する",
-              "to": "保存中"
+              "process": "検索を開始し、適用中のフィルタをチップで表示する",
+              "to": "検索中"
             }
           ],
           "source": {
-            "element": "保存ボタン"
+            "container": "フィルタパネル",
+            "element": "検索ボタン"
           }
         },
         {
-          "event": "保存結果の受信",
+          "event": "検索結果の受信",
           "notApplicable": {
-            "reason": "保存処理が開始されていないため発生しない"
+            "reason": "検索処理が開始されていないため発生しない"
           }
         },
         {
-          "event": "通知の時間経過",
-          "notApplicable": {
-            "reason": "保存完了の通知が表示されていないため発生しない"
+          "event": "表示切替",
+          "process": "検索結果の表示形式（一覧・カード）を切り替える。検索条件と結果は変えない",
+          "to": "表示中",
+          "source": {
+            "element": "表示切替ボタン"
           }
         },
         {
-          "event": "最新の取得",
-          "notApplicable": {
-            "reason": "競合の通知が非表示のため発生しない"
+          "event": "検索結果の選択",
+          "process": "選択した灯台の詳細画面に遷移する",
+          "to": null,
+          "source": {
+            "element": "検索結果一覧"
           }
         }
       ]
     },
     {
-      "state": "保存中",
+      "state": "検索中",
       "on": [
         {
-          "event": "初期値の取得",
+          "event": "初期表示の取得",
           "notApplicable": {
-            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
+            "reason": "初期表示の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
           }
         },
         {
-          "event": "入力値の変更",
-          "notApplicable": {
-            "reason": "この状態では入力欄が表示のみで編集できないため発生しない"
+          "event": "フィルタの開閉",
+          "process": "フィルタパネルの表示・非表示を切り替える。実行中の検索には影響しない",
+          "to": "検索中",
+          "source": {
+            "element": "開閉ボタン"
           }
         },
         {
-          "event": "保存の実行",
+          "event": "フィルタ入力の変更",
           "notApplicable": {
-            "reason": "この状態では保存ボタンが表示のみで押せないため発生しない（二重送信の防止）"
+            "reason": "この状態ではフィルタの入力欄が表示のみで編集できないため発生しない"
           }
         },
         {
-          "event": "保存結果の受信",
+          "event": "検索の実行",
+          "notApplicable": {
+            "reason": "この状態では検索ボタンが表示のみで押せないため発生しない（二重実行の防止）"
+          }
+        },
+        {
+          "event": "検索結果の受信",
           "branches": [
             {
               "case": "成功",
-              "process": "保存完了を通知する",
-              "to": "保存完了",
-              "message": "保存しました"
+              "process": "検索結果一覧と全件数を更新する",
+              "to": "表示中"
             },
             {
-              "case": "入力検証エラー",
-              "process": "該当要素にエラーを表示する",
-              "to": "編集可能"
-            },
-            {
-              "case": "更新の競合",
-              "process": "競合を通知し、最新取得を促す",
-              "to": "競合",
-              "message": "他の端末で更新されています。最新の内容を取得してください"
-            },
-            {
-              "case": "その他の失敗",
-              "process": "画面上部にエラーを通知する",
-              "to": "編集可能",
-              "message": "保存に失敗しました。時間をおいて再試行してください"
-            },
-            {
-              "case": "通信の失敗",
-              "process": "画面上部にエラーを通知する",
-              "to": "編集可能",
-              "message": "通信に失敗しました。時間をおいて再試行してください"
+              "case": "失敗",
+              "process": "エラーを通知する",
+              "to": "表示中",
+              "message": "検索に失敗しました。時間をおいて再試行してください"
             }
           ]
         },
         {
-          "event": "通知の時間経過",
-          "notApplicable": {
-            "reason": "保存完了の通知が表示されていないため発生しない"
-          }
-        },
-        {
-          "event": "最新の取得",
-          "notApplicable": {
-            "reason": "競合の通知が非表示のため発生しない"
-          }
-        }
-      ]
-    },
-    {
-      "state": "保存完了",
-      "on": [
-        {
-          "event": "初期値の取得",
-          "notApplicable": {
-            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
-          }
-        },
-        {
-          "event": "入力値の変更",
-          "process": "完了通知を消し、変更の有無に応じて保存ボタンの操作可否を更新する",
-          "to": "編集可能",
-          "source": {
-            "element": "表示名"
-          }
-        },
-        {
-          "event": "保存の実行",
-          "notApplicable": {
-            "reason": "保存直後は入力内容に変更がなく保存ボタンを操作できない（変更すると編集可能に遷移する）ため発生しない"
-          }
-        },
-        {
-          "event": "保存結果の受信",
-          "notApplicable": {
-            "reason": "保存処理が開始されていないため発生しない"
-          }
-        },
-        {
-          "event": "通知の時間経過",
-          "process": "完了通知を消す",
-          "to": "編集可能"
-        },
-        {
-          "event": "最新の取得",
-          "notApplicable": {
-            "reason": "競合の通知が非表示のため発生しない"
-          }
-        }
-      ]
-    },
-    {
-      "state": "競合",
-      "on": [
-        {
-          "event": "初期値の取得",
-          "notApplicable": {
-            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
-          }
-        },
-        {
-          "event": "入力値の変更",
-          "process": "変更の有無に応じて保存ボタンの操作可否を更新する",
-          "to": "競合",
-          "source": {
-            "element": "表示名"
-          }
-        },
-        {
-          "event": "保存の実行",
+          "event": "表示切替",
           "undefined": true,
           "source": {
-            "element": "保存ボタン"
+            "element": "表示切替ボタン"
           }
         },
         {
-          "event": "保存結果の受信",
+          "event": "検索結果の選択",
           "notApplicable": {
-            "reason": "保存処理が開始されていないため発生しない"
-          }
-        },
-        {
-          "event": "通知の時間経過",
-          "notApplicable": {
-            "reason": "保存完了の通知が表示されていないため発生しない"
-          }
-        },
-        {
-          "event": "最新の取得",
-          "process": "画面を再読み込みして最新の値を取得する。編集中の入力内容は破棄される",
-          "to": "読み込み中",
-          "source": {
-            "container": "競合の通知",
-            "element": "最新を取得ボタン"
+            "reason": "この状態では検索結果一覧が表示のみで選択できないため発生しない"
           }
         }
       ]

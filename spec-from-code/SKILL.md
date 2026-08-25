@@ -50,7 +50,7 @@ description: 実装済みのWebアプリのコード（React + Django を主に�
 
 主成果物は `references/screen-spec.schema.json`（v2.0）に適合するJSON（画面仕様書）。各フィールドの
 意味と設計意図は `references/screen-spec.schema.md` に書かれている。**作業前に必ずこの2つを読む。**
-出力の完成形の実例は `assets/example.SCR-030.json`（プロフィール編集画面）にある。
+出力の完成形の実例は `assets/example.SCR-030.json`（灯台検索画面）にある。
 
 副成果物として、コードと意図メモ・仕様書の食い違いを記録する**実装乖離レポート**
 （`assets/template.deviation-report.json` の形式）を出力する。食い違いが無ければ deviations は空でよい。
@@ -130,7 +130,7 @@ description: 実装済みのWebアプリのコード（React + Django を主に�
   トップレベルの要素・コンテナ名は画面内で一意、コンテナ内の要素名はそのコンテナ内で一意にする。
 - behaviorMatrix: **全状態×全イベントのセルを埋める（全域性）。** 各セルは process/to・branches・
   undefined・notApplicable のちょうど1つ。結果が複数に分かれるなら branches を使う。その状態では
-  イベントが発生し得ないセルは `notApplicable` に理由（例: この状態では保存ボタンが非表示のため）を
+  イベントが発生し得ないセルは `notApplicable` に理由（例: この状態では検索ボタンが押せないため）を
   書く。発生するが何も起きないことが仕様なら process「何もしない」で書く（notApplicable にしない）。
   イベントがボタン押下・入力変更など特定要素の操作で起きる場合は、必ず source に
   「コンテナ名／要素名」を書く。source は要素を起点に振る舞いを追う見方（要素中心ビュー）の土台に

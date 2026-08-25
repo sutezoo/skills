@@ -164,7 +164,7 @@ test-spec の各導出行を1ケースに変換する。ケースIDは連結で�
 | equivalenceClasses の boundary | `<viewpoint>-<boundaryId>` | `T01-B03` |
 | decisionTables の rule | `<viewpoint>-<ruleId>` | `T03-R2` |
 | stateTransitions の transition | `<viewpoint>-<transitionId>` | `T05-TR02` |
-| displayChecks の (要素×状態) | `<viewpoint>-<element>-<state>` | `T07-保存ボタン-保存中` |
+| displayChecks の (要素×状態) | `<viewpoint>-<element>-<state>` | `T06-検索ボタン-検索中` |
 | 共通仕様ルール由来の観点 | `<viewpoint>-<ruleId>` | `T09-COM-003` |
 
 - `expected` は test-spec の `expected`/`actions`/`message` をそのまま転記。
