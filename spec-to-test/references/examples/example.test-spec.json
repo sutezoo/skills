@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "1.0",
+  "specId": "SCR-030",
+  "title": "プロフィール編集画面 テスト仕様書",
+  "type": "test-spec",
+  "status": "draft",
+  "scope": {
+    "in": ["入力検証", "保存処理の結果分岐", "状態遷移", "状態別の表示・操作", "横断観点"],
+    "out": ["プロフィール画像のアップロード（SCR-031で別途）"]
+  },
+  "preconditions": {
+    "environment": "ステージング、対応ブラウザ最新版",
+    "data": ["有効な会員アカウント1件", "メール重複検出用の別アカウント1件"],
+    "initialState": "読み込み中"
+  },
+  "viewpoints": [
+    { "id": "T01", "category": "入力値", "description": "表示名の妥当性", "technique": "同値分割+境界値", "targets": ["表示名"], "catalogIds": [] },
+    { "id": "T02", "category": "入力値", "description": "メールアドレスの妥当性", "technique": "同値分割", "targets": ["メールアドレス"], "catalogIds": [] },
+    { "id": "T03", "category": "入力値", "description": "自己紹介の妥当性", "technique": "同値分割+境界値", "targets": ["自己紹介"], "catalogIds": [] },
+    { "id": "T04", "category": "業務ロジック", "description": "保存結果の分岐", "technique": "デシジョンテーブル", "targets": ["保存ボタン"], "catalogIds": [] },
+    { "id": "T05", "category": "状態", "description": "編集〜保存〜競合の状態遷移", "technique": "状態遷移", "targets": ["画面全体"], "catalogIds": [] },
+    { "id": "T06", "category": "UI制御", "description": "状態別の要素表示・操作可否", "technique": "状態別表示", "targets": ["保存ボタン", "エラーバナー", "保存完了の通知", "競合の通知"], "catalogIds": [] },
+    { "id": "T07", "category": "横断観点", "description": "表示名・メール・自己紹介の文字種・特殊文字", "technique": "同値分割", "targets": ["表示名", "メールアドレス", "自己紹介"], "catalogIds": ["H-STR-01〜09", "H-I18N-01〜05", "H-SEC-01/02/05"] },
+    { "id": "T08", "category": "横断観点", "description": "保存ボタンの二重送信・処理中の再操作", "technique": "単独確認", "targets": ["保存ボタン"], "catalogIds": ["H-NAV-01", "H-CONC-05", "PRJ-01"] },
+    { "id": "T09", "category": "横断観点", "description": "戻る/リロード/直URLアクセス", "technique": "単独確認", "targets": ["画面共通"], "catalogIds": ["H-NAV-02", "H-NAV-03", "H-NAV-04"] },
+    { "id": "T10", "category": "横断観点", "description": "通信失敗・タイムアウト・セッション切れ", "technique": "単独確認", "targets": ["画面共通"], "catalogIds": ["H-NET-01", "H-NET-02", "H-NET-06"] },
+    { "id": "T11", "category": "横断観点", "description": "対応ブラウザ差・レスポンシブ・ズーム", "technique": "単独確認", "targets": ["画面共通"], "catalogIds": ["H-ENV-01", "H-ENV-02", "H-ENV-03"] }
+  ],
+  "equivalenceClasses": [
+    {
+      "viewpoint": "T01",
+      "element": "表示名",
+      "classes": [
+        { "id": "EC-V01", "kind": "valid", "condition": "1〜50文字", "expected": "受理" },
+        { "id": "EC-I01", "kind": "invalid", "condition": "未入力または空白のみ", "expected": "表示名を入力してください" },
+        { "id": "EC-I02", "kind": "invalid", "condition": "50文字を超える", "expected": "表示名は50文字以内で入力してください" },
+        { "id": "EC-I03", "kind": "invalid", "condition": "絵文字・サロゲートペアを含む", "expected": "保存・表示・文字数カウントが壊れない", "catalogId": "H-I18N-01" },
+        { "id": "EC-I04", "kind": "invalid", "condition": "前後に空白を含む", "expected": "仕様どおりトリムして判定、または検証", "catalogId": "H-STR-02" },
+        { "id": "EC-I05", "kind": "invalid", "condition": "HTMLタグ/スクリプト文字列を含む", "expected": "再表示時にエスケープされる", "catalogId": "H-SEC-01" }
+      ],
+      "boundaries": [
+        { "id": "B01", "input": "0", "kind": "下限直前", "expected": "表示名を入力してください" },
+        { "id": "B02", "input": "1", "kind": "下限境界", "expected": "受理" },
+        { "id": "B03", "input": "50", "kind": "上限境界", "expected": "受理" },
+        { "id": "B04", "input": "51", "kind": "上限直後", "expected": "表示名は50文字以内で入力してください" }
+      ]
+    },
+    {
+      "viewpoint": "T02",
+      "element": "メールアドレス",
+      "classes": [
+        { "id": "EC-V02", "kind": "valid", "condition": "RFC準拠の形式", "expected": "受理" },
+        { "id": "EC-I06", "kind": "invalid", "condition": "未入力", "expected": "メールアドレスを入力してください" },
+        { "id": "EC-I07", "kind": "invalid", "condition": "形式が不正", "expected": "メールアドレスの形式が正しくありません" },
+        { "id": "EC-I08", "kind": "invalid", "condition": "他の利用者と重複している", "expected": "このメールアドレスは既に使用されています" },
+        { "id": "EC-I09", "kind": "invalid", "condition": "絵文字・全角英数を含む", "expected": "形式エラー。文字種で壊れない", "catalogId": "H-I18N-01" }
+      ]
+    },
+    {
+      "viewpoint": "T03",
+      "element": "自己紹介",
+      "classes": [
+        { "id": "EC-V03", "kind": "valid", "condition": "500文字以内", "expected": "受理" },
+        { "id": "EC-I10", "kind": "invalid", "condition": "500文字を超える", "expected": "自己紹介は500文字以内で入力してください" },
+        { "id": "EC-I11", "kind": "invalid", "condition": "改行・絵文字を多数含む長文", "expected": "保存・表示・カウントが壊れない（長文レイアウト）", "catalogId": "H-DISP-03" }
+      ],
+      "boundaries": [
+        { "id": "B05", "input": "500", "kind": "上限境界", "expected": "受理" },
+        { "id": "B06", "input": "501", "kind": "上限直後", "expected": "自己紹介は500文字以内で入力してください" }
+      ]
+    }
+  ],
+  "decisionTables": [
+    {
+      "viewpoint": "T04",
+      "name": "保存中での保存結果の受信",
+      "conditions": ["結果"],
+      "rules": [
+        { "id": "R1", "values": { "成功": "T" }, "actions": ["保存完了を通知する", "→ 保存完了"], "message": "保存しました" },
+        { "id": "R2", "values": { "入力検証エラー": "T" }, "actions": ["該当要素にエラーを表示する", "→ 編集可能"] },
+        { "id": "R3", "values": { "更新の競合": "T" }, "actions": ["競合を通知し最新取得を促す", "→ 競合"], "message": "他の端末で更新されています。最新の内容を取得してください" },
+        { "id": "R4", "values": { "その他の失敗": "T" }, "actions": ["画面上部にエラーを通知する", "→ 編集可能"], "message": "保存に失敗しました。時間をおいて再試行してください" },
+        { "id": "R5", "values": { "通信の失敗": "T" }, "actions": ["画面上部にエラーを通知する", "→ 編集可能"], "message": "通信に失敗しました。時間をおいて再試行してください" }
+      ]
+    }
+  ],
+  "stateTransitions": [
+    {
+      "viewpoint": "T05",
+      "transitions": [
+        { "id": "TR01", "from": "読み込み中", "event": "初期値の取得", "to": "編集可能", "process": "取得した値を各入力欄に表示する", "note": "成功時" },
+        { "id": "TR02", "from": "編集可能", "event": "入力値の変更", "to": "編集可能", "process": "保存ボタンの操作可否を更新する" },
+        { "id": "TR03", "from": "編集可能", "event": "保存の実行", "to": "保存中", "process": "保存処理を開始する", "note": "入力検証エラーなし" },
+        { "id": "TR04", "from": "編集可能", "event": "保存の実行", "to": "編集可能", "process": "該当要素にエラーを表示", "note": "入力検証エラーあり" },
+        { "id": "TR05", "from": "保存中", "event": "保存結果の受信", "to": "保存完了", "process": "完了通知", "note": "成功" },
+        { "id": "TR06", "from": "保存中", "event": "保存結果の受信", "to": "競合", "process": "競合通知", "note": "更新競合" },
+        { "id": "TR07", "from": "保存完了", "event": "通知の時間経過", "to": "編集可能", "process": "完了通知を消す" },
+        { "id": "TR08", "from": "競合", "event": "最新の取得", "to": "読み込み中", "process": "再読み込み。編集内容は破棄" }
+      ]
+    }
+  ],
+  "displayChecks": [
+    {
+      "viewpoint": "T06",
+      "element": "保存ボタン",
+      "byState": [
+        { "state": "読み込み中", "visibility": "hidden" },
+        { "state": "編集可能", "visibility": "conditional", "condition": "入力内容に変更があるときのみ" },
+        { "state": "保存中", "visibility": "visible" },
+        { "state": "保存完了", "visibility": "conditional", "condition": "入力内容に変更があるときのみ" },
+        { "state": "競合", "visibility": "conditional", "condition": "入力内容に変更があるときのみ" }
+      ]
+    },
+    {
+      "viewpoint": "T06",
+      "element": "競合の通知",
+      "byState": [
+        { "state": "読み込み中", "visibility": "hidden" },
+        { "state": "編集可能", "visibility": "hidden" },
+        { "state": "保存中", "visibility": "hidden" },
+        { "state": "保存完了", "visibility": "hidden" },
+        { "state": "競合", "visibility": "visible" }
+      ]
+    }
+  ],
+  "crossCuttingCoverage": [
+    { "target": "表示名", "kind": "テキスト入力", "catalogId": "H-STR-01〜09", "status": "applied", "coveredBy": "T07 / T01の無効クラス EC-I03〜05" },
+    { "target": "表示名", "kind": "テキスト入力", "catalogId": "H-I18N-01〜05", "status": "applied", "coveredBy": "T07 / EC-I03" },
+    { "target": "メールアドレス", "kind": "テキスト入力", "catalogId": "H-SEC-01/02/05", "status": "applied", "coveredBy": "T07 / EC-I09" },
+    { "target": "自己紹介", "kind": "テキストエリア", "catalogId": "H-DISP-03", "status": "applied", "coveredBy": "T03 EC-I11" },
+    { "target": "保存ボタン", "kind": "ボタン", "catalogId": "H-NAV-01", "status": "applied", "coveredBy": "T08" },
+    { "target": "保存ボタン", "kind": "ボタン", "catalogId": "H-CONC-05", "status": "applied", "coveredBy": "T08" },
+    { "target": "保存ボタン", "kind": "ボタン", "catalogId": "H-NET-01/02/06", "status": "applied", "coveredBy": "T10" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-NAV-02/03/04", "status": "applied", "coveredBy": "T09" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-ENV-01/02/03", "status": "applied", "coveredBy": "T11" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-CONC-01", "status": "applied", "coveredBy": "T05 競合遷移(TR06/TR08)で確認" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-ENV-05", "status": "excluded", "reason": "project-profile: ダークモード非提供" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-A11Y-01〜05", "status": "excluded", "reason": "project-profile: アクセシビリティ要件スコープ外" },
+    { "target": "画面共通", "kind": "画面全体", "catalogId": "H-I18N-06", "status": "excluded", "reason": "project-profile: 多言語非対応（RTL対象外）" },
+    { "target": "（一覧表示）", "kind": "一覧・テーブル", "catalogId": "H-DISP-01/02/06/07", "status": "n_a", "reason": "この画面に一覧表示なし" },
+    { "target": "（日付入力）", "kind": "日付・時刻", "catalogId": "H-DATE-01〜07", "status": "n_a", "reason": "日付入力項目なし" },
+    { "target": "（ファイル）", "kind": "ファイル", "catalogId": "H-FILE-01〜05", "status": "n_a", "reason": "この画面にファイル入力なし（SCR-031で扱う）" }
+  ],
+  "scenarios": [],
+  "openIssues": [
+    { "ref": "読み込み中 / 初期値の取得 / 失敗", "note": "初期値取得が失敗したときの挙動が spec で undefined。確定後に遷移とエラー表示の観点を起こす。" }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "type": "project-profile",
+  "title": "会員制サービス プロジェクトプロファイル",
+  "status": "draft",
+  "updated": "2026-05-28",
+  "environment": {
+    "browsers": "Chrome / Edge / Safari の最新2バージョン",
+    "screenSizes": "PC(1280px〜) / スマホ(375px〜)。レスポンシブ対応する",
+    "i18n": "日本語のみ（UIの多言語化はしない）",
+    "accessibility": "特になし（今フェーズではスコープ外）",
+    "authz": "ログイン必須。役割: 管理者 / 一般会員 / 未ログイン",
+    "charset": "DB・通信ともに UTF-8（MySQL は utf8mb4）"
+  },
+  "exclusions": [
+    { "catalogId": "H-I18N-06", "scope": "全画面", "reason": "多言語対応せず日本語のみのため、RTL（アラビア語等）は対象外" },
+    { "catalogId": "A11Y 全体", "scope": "全画面", "reason": "今フェーズではアクセシビリティ要件が契約スコープ外。次フェーズで再検討" },
+    { "catalogId": "H-ENV-05", "scope": "全画面", "reason": "ダークモードを提供しないため" },
+    { "catalogId": "H-ENV-06", "scope": "全画面", "reason": "サードパーティCookieに依存しない設計のため" }
+  ],
+  "additionalViewpoints": [
+    {
+      "id": "PRJ-01",
+      "description": "更新系操作の二重実行防止",
+      "check": "保存・更新が二重送信で重複しない",
+      "reason": "過去に二重更新の不具合が発生したため必須化"
+    }
+  ],
+  "notes": [
+    "H-I18N-01〜04（絵文字・サロゲートペア・正規化・全角半角・異体字）は日本語のみでも残す。日本語入力で日常的に発生するため。"
+  ]
+}

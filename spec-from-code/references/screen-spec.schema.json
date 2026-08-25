@@ -1,0 +1,470 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/screen-spec/v1.json",
+  "title": "画面仕様書スキーマ",
+  "description": "code-to-spec が出力し、Viewer が表示し、spec-to-test が読み込む、画面仕様書の共有契約。",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "type",
+    "states",
+    "events",
+    "elements",
+    "behaviorMatrix"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.2",
+      "description": "このスキーマのバージョン。互換性判定に用いる。"
+    },
+    "id": {
+      "type": "string",
+      "description": "画面の識別子（例: SCR-030）。"
+    },
+    "title": {
+      "type": "string",
+      "description": "画面の名称。"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "screen"
+      ],
+      "description": "仕様の種別。現状は画面（screen）のみ。将来の拡張余地として持つ。"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "reviewed",
+        "fixed"
+      ],
+      "description": "仕様の確定度。draft=生成直後の未レビュー、reviewed=人間が確認済み、fixed=確定。"
+    },
+    "layout": {
+      "type": "object",
+      "description": "画面レイアウト。図そのものは持たず、モック画像への参照を持つ。",
+      "additionalProperties": false,
+      "properties": {
+        "mockImage": {
+          "type": "string",
+          "description": "モック画像のパスまたはファイル名。レイアウトの正はこの画像とする。"
+        }
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "description": "この画面の入口（どこから来るか）と出口（どこへ行くか）。",
+      "additionalProperties": false,
+      "properties": {
+        "entryPoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/navLink"
+          },
+          "description": "この画面への遷移元。特定できない場合は空配列にする。"
+        },
+        "exitPoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/navLink"
+          },
+          "description": "この画面からの遷移先。特定できない場合は空配列にする。"
+        }
+      }
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "description": "画面が取りうる状態の一覧。",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "状態名。画面内で一意。"
+          },
+          "description": {
+            "type": "string",
+            "description": "状態の説明。"
+          },
+          "initial": {
+            "type": "boolean",
+            "description": "初期状態であれば true。一覧中ちょうど1つ。"
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "description": "画面で起きる生のトリガーの一覧。結果による枝分かれはここに列挙せず、behaviorMatrix の branches で表す。",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "イベント名。画面内で一意。behaviorMatrix から参照される。"
+          },
+          "description": {
+            "type": "string",
+            "description": "イベントの説明（何が起きたときか）。"
+          }
+        }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "description": "画面要素の一覧。単独要素（ページ直下のボタン・入力欄や、グローバルなトーストなど）と、コンテナ（ダイアログのように複数要素をまとめるもの）をトップレベルに混在させる。すべての画面要素を漏れなく挙げる。包括的な『本体』のような器は作らない。",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "behaviorMatrix": {
+      "type": "array",
+      "description": "状態ごとに、起きうるイベントと処理・遷移先を定義する（状態中心の網羅）。全状態×全イベントの網羅性をここで判定する。",
+      "items": {
+        "type": "object",
+        "required": [
+          "state",
+          "on"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "type": "string",
+            "description": "対象の状態名。states の name と一致させる。"
+          },
+          "on": {
+            "type": "array",
+            "description": "この状態で起きうるイベントごとの振る舞い。",
+            "items": {
+              "$ref": "#/$defs/behavior"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "navLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "遷移元の画面または起点（entryPoints で使う）。"
+        },
+        "to": {
+          "type": "string",
+          "description": "遷移先の画面（exitPoints で使う）。"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "遷移が起きる条件。"
+        },
+        "note": {
+          "type": "string",
+          "description": "補足。"
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "required": [
+        "visibility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "hidden",
+            "visible",
+            "operable",
+            "conditional"
+          ],
+          "description": "その状態での見え方。hidden=非表示, visible=表示(操作不可), operable=操作可, conditional=条件付き操作可(conditionに条件文を書く)。表示専用要素は hidden/visible のみを使う。"
+        },
+        "condition": {
+          "type": "string",
+          "description": "visibility が conditional のときの条件文（例: 入力内容に変更があるとき）。"
+        }
+      }
+    },
+    "behavior": {
+      "type": "object",
+      "required": [
+        "event"
+      ],
+      "additionalProperties": false,
+      "description": "1イベントに対する振る舞い。結果が一通りなら process/to を直接持ち、複数に枝分かれするなら branches に分ける。両者は排他。",
+      "properties": {
+        "event": {
+          "type": "string",
+          "description": "イベント名。events の name と一致させる。"
+        },
+        "process": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "実行する処理（外部仕様として記述。内部実装は書かない）。"
+        },
+        "to": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "遷移先の状態名。状態が変わらないなら自状態、定まらないなら null。"
+        },
+        "message": {
+          "type": "string",
+          "description": "この振る舞いで画面に表示するメッセージ。"
+        },
+        "undefined": {
+          "type": "boolean",
+          "description": "true なら、この振る舞いがコードから判断できない未確定箇所。人間の確認に回す。"
+        },
+        "branches": {
+          "type": "array",
+          "minItems": 1,
+          "description": "結果による枝分かれ。各分岐が case（条件）と process/to/message/undefined を持つ。",
+          "items": {
+            "type": "object",
+            "required": [
+              "case"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "case": {
+                "type": "string",
+                "description": "分岐の条件（例: 成功, 更新の競合）。"
+              },
+              "process": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "その分岐で実行する処理。"
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "その分岐の遷移先の状態名。"
+              },
+              "message": {
+                "type": "string",
+                "description": "その分岐で表示するメッセージ。"
+              },
+              "undefined": {
+                "type": "boolean",
+                "description": "true なら未確定の分岐。"
+              }
+            }
+          }
+        },
+        "source": {
+          "type": "object",
+          "description": "このイベントが特定の要素操作で起きる場合の発生源。トップレベル単独要素なら element のみ、コンテナ内要素なら container と element で指す。要素操作によらないイベントでは省略する。",
+          "additionalProperties": false,
+          "required": [
+            "element"
+          ],
+          "properties": {
+            "container": {
+              "type": "string",
+              "description": "発生源の要素が属するコンテナ名。トップレベルの単独要素を指す場合は省略する。"
+            },
+            "element": {
+              "type": "string",
+              "description": "発生源の要素名（コンテナ内で一意）。"
+            }
+          }
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": [
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "要素名。画面内で一意。これが識別キー。"
+        },
+        "kind": {
+          "type": "string",
+          "description": "要素の種別（例: テキスト入力, ボタン, 表示テキスト）。"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "入力要素が必須なら true。"
+        },
+        "description": {
+          "type": "string",
+          "description": "要素の補足説明。"
+        },
+        "constraints": {
+          "type": "object",
+          "description": "入力値の制約。テスト時の境界値はここから算出する。",
+          "additionalProperties": true,
+          "properties": {
+            "minLength": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "最小文字数。"
+            },
+            "maxLength": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "最大文字数。"
+            },
+            "format": {
+              "type": "string",
+              "description": "値の形式（例: email）。"
+            },
+            "blankOnly": {
+              "type": "boolean",
+              "description": "空白のみの入力を許すか。false なら許さない。"
+            }
+          }
+        },
+        "validations": {
+          "type": "array",
+          "description": "入力検証。各エントリは「条件」と、その条件に当たったときの「メッセージ」。サーバ側判定（重複など）も区別せず、画面上のエラーの一つとして列挙する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "condition": {
+                "type": "string",
+                "description": "検証に引っかかる条件。"
+              },
+              "message": {
+                "type": "string",
+                "description": "条件に当たったとき画面に表示するメッセージ。"
+              }
+            }
+          }
+        },
+        "displayByState": {
+          "type": "object",
+          "description": "状態ごとの見え方。キーは states の name と一致させる。",
+          "additionalProperties": {
+            "$ref": "#/$defs/display"
+          }
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "要素名。画面内で一意。これが識別キー。"
+        },
+        "kind": {
+          "type": "string",
+          "description": "要素の種別（例: テキスト入力, ボタン, 表示テキスト）。"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "入力要素が必須なら true。"
+        },
+        "description": {
+          "type": "string",
+          "description": "要素の補足説明。"
+        },
+        "constraints": {
+          "type": "object",
+          "description": "入力値の制約。テスト時の境界値はここから算出する。",
+          "additionalProperties": true,
+          "properties": {
+            "minLength": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "最小文字数。"
+            },
+            "maxLength": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "最大文字数。"
+            },
+            "format": {
+              "type": "string",
+              "description": "値の形式（例: email）。"
+            },
+            "blankOnly": {
+              "type": "boolean",
+              "description": "空白のみの入力を許すか。false なら許さない。"
+            }
+          }
+        },
+        "validations": {
+          "type": "array",
+          "description": "入力検証。各エントリは「条件」と、その条件に当たったときの「メッセージ」。サーバ側判定（重複など）も区別せず、画面上のエラーの一つとして列挙する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "condition": {
+                "type": "string",
+                "description": "検証に引っかかる条件。"
+              },
+              "message": {
+                "type": "string",
+                "description": "条件に当たったとき画面に表示するメッセージ。"
+              }
+            }
+          }
+        },
+        "displayByState": {
+          "type": "object",
+          "description": "状態ごとの見え方。キーは states の name と一致させる。",
+          "additionalProperties": {
+            "$ref": "#/$defs/display"
+          }
+        },
+        "children": {
+          "type": "array",
+          "description": "このコンテナに属する個別要素。これを持つ項目はコンテナ（ダイアログ・複数要素のまとまり）として扱う。持たない項目は単独要素。",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        }
+      },
+      "description": "トップレベルの画面要素。children を持てばコンテナ、持たなければ単独要素。"
+    }
+  }
+}
