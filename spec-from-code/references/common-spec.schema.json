@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/common-spec/v1.json",
+  "title": "共通仕様スキーマ",
+  "description": "日付フォーマット・エラー表示方式・二重送信防止・ページング挙動のような、画面横断の振る舞いを一箇所に定義するファイルの契約。各画面仕様書はこれを暗黙に継承し、逸脱する場合のみ overrides で宣言する。仕様に明記されにくい汎用観点（0件表示、二重送信など）の置き場所でもあり、spec-to-test の横断観点の導出元になる。",
+  "type": "object",
+  "required": ["schemaVersion", "type", "title", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0",
+      "description": "このスキーマのバージョン。"
+    },
+    "type": {
+      "type": "string",
+      "const": "common-spec",
+      "description": "文書の種別。"
+    },
+    "title": {
+      "type": "string",
+      "description": "文書名（例: ○○システム 共通仕様）。"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "fixed"],
+      "description": "確定度。"
+    },
+    "updated": {
+      "type": "string",
+      "description": "最終更新日（YYYY-MM-DD）。"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "description": "画面横断のルール。各画面はこの全ルールを暗黙に継承する。画面側の overrides はここに実在する id しか参照できない（lint で検査）。",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "statement"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^COM-[0-9]{3}$",
+            "description": "ルールの識別子（例: COM-001）。全ルールで一意。画面仕様書の overrides[].rule から参照される。"
+          },
+          "name": {
+            "type": "string",
+            "description": "ルールの短い名前（例: エラー表示方式）。"
+          },
+          "statement": {
+            "type": "string",
+            "description": "ルール本文。画面の振る舞いの言葉で、観測可能に書く（例: 処理失敗のエラーは画面右下のトーストで5秒間表示する）。実装語を持ち込まない。"
+          },
+          "testNote": {
+            "type": "string",
+            "description": "テスト導出時の補足（確認の勘所、対応する横断観点カタログのIDなど）。"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "運用上の注意。"
+    }
+  }
+}

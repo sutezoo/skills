@@ -1,14 +1,27 @@
 {
-  "schemaVersion": "1.2",
+  "schemaVersion": "2.0",
   "id": "SCR-030",
   "title": "プロフィール編集画面",
   "type": "screen",
   "status": "draft",
+  "commonSpec": "example.common-spec.json",
+  "overrides": [
+    {
+      "rule": "COM-002",
+      "behavior": "保存・通信の失敗は画面上部のエラーバナーで表示する",
+      "reason": "編集中の入力内容の近くで気づけるよう、この画面はトーストではなくバナーで表示する"
+    }
+  ],
   "layout": {
     "mockImage": "mocks/SCR-030.png"
   },
   "navigation": {
-    "entryPoints": [],
+    "entryPoints": [
+      {
+        "from": "SCR-001",
+        "trigger": "グローバルメニューの「プロフィール編集」を選択"
+      }
+    ],
     "exitPoints": []
   },
   "states": [
@@ -65,6 +78,10 @@
       "name": "表示名",
       "kind": "テキスト入力",
       "required": true,
+      "dataRef": {
+        "table": "利用者",
+        "column": "表示名"
+      },
       "constraints": {
         "minLength": 1,
         "maxLength": 50,
@@ -102,7 +119,12 @@
       "name": "メールアドレス",
       "kind": "テキスト入力",
       "required": true,
+      "dataRef": {
+        "table": "利用者",
+        "column": "メールアドレス"
+      },
       "constraints": {
+        "maxLength": 254,
         "format": "email"
       },
       "validations": [
@@ -113,6 +135,10 @@
         {
           "condition": "形式が不正",
           "message": "メールアドレスの形式が正しくありません"
+        },
+        {
+          "condition": "254文字を超える",
+          "message": "メールアドレスは254文字以内で入力してください"
         },
         {
           "condition": "他の利用者と重複している",
@@ -140,6 +166,10 @@
     {
       "name": "自己紹介",
       "kind": "テキストエリア",
+      "dataRef": {
+        "table": "利用者",
+        "column": "自己紹介"
+      },
       "constraints": {
         "maxLength": 500
       },
@@ -237,7 +267,7 @@
     },
     {
       "name": "保存完了の通知",
-      "kind": "通知トースト",
+      "kind": "トースト",
       "displayByState": {
         "読み込み中": {
           "visibility": "hidden"
@@ -336,17 +366,51 @@
             },
             {
               "case": "失敗",
-              "process": null,
-              "to": null,
               "undefined": true
             }
           ]
+        },
+        {
+          "event": "入力値の変更",
+          "notApplicable": {
+            "reason": "この状態では入力欄が非表示のため発生しない"
+          }
+        },
+        {
+          "event": "保存の実行",
+          "notApplicable": {
+            "reason": "この状態では保存ボタンが非表示のため発生しない"
+          }
+        },
+        {
+          "event": "保存結果の受信",
+          "notApplicable": {
+            "reason": "保存処理が開始されていないため発生しない"
+          }
+        },
+        {
+          "event": "通知の時間経過",
+          "notApplicable": {
+            "reason": "保存完了の通知が表示されていないため発生しない"
+          }
+        },
+        {
+          "event": "最新の取得",
+          "notApplicable": {
+            "reason": "競合の通知が非表示のため発生しない"
+          }
         }
       ]
     },
     {
       "state": "編集可能",
       "on": [
+        {
+          "event": "初期値の取得",
+          "notApplicable": {
+            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
+          }
+        },
         {
           "event": "入力値の変更",
           "process": "変更の有無に応じて保存ボタンの操作可否を更新する",
@@ -372,12 +436,48 @@
           "source": {
             "element": "保存ボタン"
           }
+        },
+        {
+          "event": "保存結果の受信",
+          "notApplicable": {
+            "reason": "保存処理が開始されていないため発生しない"
+          }
+        },
+        {
+          "event": "通知の時間経過",
+          "notApplicable": {
+            "reason": "保存完了の通知が表示されていないため発生しない"
+          }
+        },
+        {
+          "event": "最新の取得",
+          "notApplicable": {
+            "reason": "競合の通知が非表示のため発生しない"
+          }
         }
       ]
     },
     {
       "state": "保存中",
       "on": [
+        {
+          "event": "初期値の取得",
+          "notApplicable": {
+            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
+          }
+        },
+        {
+          "event": "入力値の変更",
+          "notApplicable": {
+            "reason": "この状態では入力欄が表示のみで編集できないため発生しない"
+          }
+        },
+        {
+          "event": "保存の実行",
+          "notApplicable": {
+            "reason": "この状態では保存ボタンが表示のみで押せないため発生しない（二重送信の防止）"
+          }
+        },
         {
           "event": "保存結果の受信",
           "branches": [
@@ -411,6 +511,18 @@
               "message": "通信に失敗しました。時間をおいて再試行してください"
             }
           ]
+        },
+        {
+          "event": "通知の時間経過",
+          "notApplicable": {
+            "reason": "保存完了の通知が表示されていないため発生しない"
+          }
+        },
+        {
+          "event": "最新の取得",
+          "notApplicable": {
+            "reason": "競合の通知が非表示のため発生しない"
+          }
         }
       ]
     },
@@ -418,15 +530,80 @@
       "state": "保存完了",
       "on": [
         {
+          "event": "初期値の取得",
+          "notApplicable": {
+            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
+          }
+        },
+        {
+          "event": "入力値の変更",
+          "process": "完了通知を消し、変更の有無に応じて保存ボタンの操作可否を更新する",
+          "to": "編集可能",
+          "source": {
+            "element": "表示名"
+          }
+        },
+        {
+          "event": "保存の実行",
+          "notApplicable": {
+            "reason": "保存直後は入力内容に変更がなく保存ボタンを操作できない（変更すると編集可能に遷移する）ため発生しない"
+          }
+        },
+        {
+          "event": "保存結果の受信",
+          "notApplicable": {
+            "reason": "保存処理が開始されていないため発生しない"
+          }
+        },
+        {
           "event": "通知の時間経過",
           "process": "完了通知を消す",
           "to": "編集可能"
+        },
+        {
+          "event": "最新の取得",
+          "notApplicable": {
+            "reason": "競合の通知が非表示のため発生しない"
+          }
         }
       ]
     },
     {
       "state": "競合",
       "on": [
+        {
+          "event": "初期値の取得",
+          "notApplicable": {
+            "reason": "初期値の取得は画面表示時（読み込み中）にのみ行われるため発生しない"
+          }
+        },
+        {
+          "event": "入力値の変更",
+          "process": "変更の有無に応じて保存ボタンの操作可否を更新する",
+          "to": "競合",
+          "source": {
+            "element": "表示名"
+          }
+        },
+        {
+          "event": "保存の実行",
+          "undefined": true,
+          "source": {
+            "element": "保存ボタン"
+          }
+        },
+        {
+          "event": "保存結果の受信",
+          "notApplicable": {
+            "reason": "保存処理が開始されていないため発生しない"
+          }
+        },
+        {
+          "event": "通知の時間経過",
+          "notApplicable": {
+            "reason": "保存完了の通知が表示されていないため発生しない"
+          }
+        },
         {
           "event": "最新の取得",
           "process": "画面を再読み込みして最新の値を取得する。編集中の入力内容は破棄される",

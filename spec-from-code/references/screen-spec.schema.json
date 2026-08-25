@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/screen-spec/v1.json",
+  "$id": "https://example.com/screen-spec/v2.json",
   "title": "画面仕様書スキーマ",
-  "description": "code-to-spec が出力し、Viewer が表示し、spec-to-test が読み込む、画面仕様書の共有契約。",
+  "description": "spec-from-code が出力し、Viewer が表示し、spec-to-test が読み込む、画面仕様書の共有契約。v2.0 で kind の enum 化・種別ごとの記述義務・notApplicable（該当なし）・共通仕様への overrides・画面間参照の正規化を導入した。",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -18,12 +18,13 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "const": "1.2",
+      "const": "2.0",
       "description": "このスキーマのバージョン。互換性判定に用いる。"
     },
     "id": {
       "type": "string",
-      "description": "画面の識別子（例: SCR-030）。"
+      "pattern": "^SCR-[0-9]{3}$",
+      "description": "画面の識別子（例: SCR-030）。SCR-数字3桁に固定する。navigation の from/to から参照されるため、全画面で一意にする。"
     },
     "title": {
       "type": "string",
@@ -45,6 +46,34 @@
       ],
       "description": "仕様の確定度。draft=生成直後の未レビュー、reviewed=人間が確認済み、fixed=確定。"
     },
+    "commonSpec": {
+      "type": "string",
+      "description": "この画面が暗黙に継承する共通仕様ファイル（common-spec.json）へのパス。プロジェクトに共通仕様がある場合は必ず書く。"
+    },
+    "overrides": {
+      "type": "array",
+      "description": "共通仕様からの意図的な逸脱の宣言。逸脱する場合のみ書く。reason が必須なので、意図的な例外と単なる書き揺れを機械的に区別できる。",
+      "items": {
+        "type": "object",
+        "required": ["rule", "behavior", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": {
+            "type": "string",
+            "pattern": "^COM-[0-9]{3}$",
+            "description": "逸脱する共通仕様ルールのID（例: COM-002）。共通仕様の rules[].id に実在すること（lint で検査）。"
+          },
+          "behavior": {
+            "type": "string",
+            "description": "この画面での実際の振る舞い（共通仕様の代わりに適用される内容）。"
+          },
+          "reason": {
+            "type": "string",
+            "description": "逸脱の理由。必須。"
+          }
+        }
+      }
+    },
     "layout": {
       "type": "object",
       "description": "画面レイアウト。図そのものは持たず、モック画像への参照を持つ。",
@@ -52,26 +81,26 @@
       "properties": {
         "mockImage": {
           "type": "string",
-          "description": "モック画像のパスまたはファイル名。レイアウトの正はこの画像とする。"
+          "description": "モック画像のパスまたはファイル名。レイアウトの正はこの画像とする。Figma 等へのリンクでもよい。"
         }
       }
     },
     "navigation": {
       "type": "object",
-      "description": "この画面の入口（どこから来るか）と出口（どこへ行くか）。",
+      "description": "この画面の入口（どこから来るか）と出口（どこへ行くか）。from/to は画面IDに限定する（自由文字列にしない）。これにより全ファイル横断の到達可能性検査と遷移図の自動生成が可能になる。",
       "additionalProperties": false,
       "properties": {
         "entryPoints": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/navLink"
+            "$ref": "#/$defs/entryLink"
           },
           "description": "この画面への遷移元。特定できない場合は空配列にする。"
         },
         "exitPoints": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/navLink"
+            "$ref": "#/$defs/exitLink"
           },
           "description": "この画面からの遷移先。特定できない場合は空配列にする。"
         }
@@ -134,7 +163,7 @@
     },
     "behaviorMatrix": {
       "type": "array",
-      "description": "状態ごとに、起きうるイベントと処理・遷移先を定義する（状態中心の網羅）。全状態×全イベントの網羅性をここで判定する。",
+      "description": "状態ごとに、起きうるイベントと処理・遷移先を定義する（状態中心の網羅）。全状態×全イベントのセルを埋める（全域性）。起き得ないセルは notApplicable を理由付きで書く。未記載のセルは lint がエラーにする。",
       "items": {
         "type": "object",
         "required": [
@@ -145,11 +174,11 @@
         "properties": {
           "state": {
             "type": "string",
-            "description": "対象の状態名。states の name と一致させる。"
+            "description": "対象の状態名。states の name と一致させる。全状態をちょうど1回ずつ挙げる。"
           },
           "on": {
             "type": "array",
-            "description": "この状態で起きうるイベントごとの振る舞い。",
+            "description": "この状態でのイベントごとの振る舞い。events の全件をちょうど1回ずつカバーする（全域性。lint で検査）。",
             "items": {
               "$ref": "#/$defs/behavior"
             }
@@ -159,21 +188,39 @@
     }
   },
   "$defs": {
-    "navLink": {
+    "entryLink": {
       "type": "object",
+      "required": ["from"],
       "additionalProperties": false,
       "properties": {
         "from": {
           "type": "string",
-          "description": "遷移元の画面または起点（entryPoints で使う）。"
-        },
-        "to": {
-          "type": "string",
-          "description": "遷移先の画面（exitPoints で使う）。"
+          "pattern": "^SCR-[0-9]{3}$",
+          "description": "遷移元の画面ID。自由文字列にしない。"
         },
         "trigger": {
           "type": "string",
-          "description": "遷移が起きる条件。"
+          "description": "遷移が起きる条件・操作。"
+        },
+        "note": {
+          "type": "string",
+          "description": "補足。"
+        }
+      }
+    },
+    "exitLink": {
+      "type": "object",
+      "required": ["to"],
+      "additionalProperties": false,
+      "properties": {
+        "to": {
+          "type": "string",
+          "pattern": "^SCR-[0-9]{3}$",
+          "description": "遷移先の画面ID。自由文字列にしない。"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "遷移が起きる条件・操作。"
         },
         "note": {
           "type": "string",
@@ -210,7 +257,59 @@
         "event"
       ],
       "additionalProperties": false,
-      "description": "1イベントに対する振る舞い。結果が一通りなら process/to を直接持ち、複数に枝分かれするなら branches に分ける。両者は排他。",
+      "description": "1つの 状態×イベント セルの振る舞い。次の4通りのちょうど1つを取る（排他）: (a) 結果が一通り → process/to、(b) 結果が枝分かれ → branches、(c) 挙動が確定できない → undefined、(d) この状態ではイベントが起き得ない → notApplicable（理由必須）。",
+      "oneOf": [
+        {
+          "anyOf": [
+            { "required": ["process"] },
+            { "required": ["to"] }
+          ],
+          "not": {
+            "anyOf": [
+              { "required": ["branches"] },
+              { "required": ["undefined"] },
+              { "required": ["notApplicable"] }
+            ]
+          }
+        },
+        {
+          "required": ["branches"],
+          "not": {
+            "anyOf": [
+              { "required": ["process"] },
+              { "required": ["to"] },
+              { "required": ["message"] },
+              { "required": ["undefined"] },
+              { "required": ["notApplicable"] }
+            ]
+          }
+        },
+        {
+          "required": ["undefined"],
+          "not": {
+            "anyOf": [
+              { "required": ["process"] },
+              { "required": ["to"] },
+              { "required": ["message"] },
+              { "required": ["branches"] },
+              { "required": ["notApplicable"] }
+            ]
+          }
+        },
+        {
+          "required": ["notApplicable"],
+          "not": {
+            "anyOf": [
+              { "required": ["process"] },
+              { "required": ["to"] },
+              { "required": ["message"] },
+              { "required": ["branches"] },
+              { "required": ["undefined"] },
+              { "required": ["source"] }
+            ]
+          }
+        }
+      ],
       "properties": {
         "event": {
           "type": "string",
@@ -221,7 +320,7 @@
             "string",
             "null"
           ],
-          "description": "実行する処理（外部仕様として記述。内部実装は書かない）。"
+          "description": "実行する処理（外部仕様として記述。内部実装は書かない）。何も起きないことが仕様なら「何もしない」と書く（notApplicable にしない）。"
         },
         "to": {
           "type": [
@@ -236,18 +335,50 @@
         },
         "undefined": {
           "type": "boolean",
-          "description": "true なら、この振る舞いがコードから判断できない未確定箇所。人間の確認に回す。"
+          "const": true,
+          "description": "この振る舞いがコードからも意図メモ・仕様書からも判断できない未確定箇所。人間の確認に回す。"
+        },
+        "notApplicable": {
+          "type": "object",
+          "required": ["reason"],
+          "additionalProperties": false,
+          "description": "この状態ではこのイベントが発生し得ないことの宣言。『書き忘れ』と区別するための一級市民。発生し得るが何も起きない場合はこれを使わず process「何もしない」で書く。",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "description": "発生し得ない根拠（例: この状態では保存ボタンが非表示のため）。必須。"
+            }
+          }
         },
         "branches": {
           "type": "array",
           "minItems": 1,
-          "description": "結果による枝分かれ。各分岐が case（条件）と process/to/message/undefined を持つ。",
+          "description": "結果による枝分かれ。各分岐が case（条件）と process/to/message または undefined を持つ。",
           "items": {
             "type": "object",
             "required": [
               "case"
             ],
             "additionalProperties": false,
+            "oneOf": [
+              {
+                "anyOf": [
+                  { "required": ["process"] },
+                  { "required": ["to"] }
+                ],
+                "not": { "required": ["undefined"] }
+              },
+              {
+                "required": ["undefined"],
+                "not": {
+                  "anyOf": [
+                    { "required": ["process"] },
+                    { "required": ["to"] },
+                    { "required": ["message"] }
+                  ]
+                }
+              }
+            ],
             "properties": {
               "case": {
                 "type": "string",
@@ -273,7 +404,8 @@
               },
               "undefined": {
                 "type": "boolean",
-                "description": "true なら未確定の分岐。"
+                "const": true,
+                "description": "true なら未確定の分岐。process/to/message は書かない。"
               }
             }
           }
@@ -298,6 +430,79 @@
         }
       }
     },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "テキスト入力",
+        "テキストエリア",
+        "数値入力",
+        "日付入力",
+        "選択",
+        "チェックボックス",
+        "ラジオボタン",
+        "ファイル入力",
+        "ボタン",
+        "リンク",
+        "一覧",
+        "表示テキスト",
+        "画像",
+        "バナー",
+        "トースト",
+        "ダイアログ"
+      ],
+      "description": "要素の種別。自由文字列にせず、この enum から選ぶ（用語の揺れを構造的に潰す）。統制するのは分類軸だけで、メッセージ文言などのデータは縛らない。spec-to-test の kind→観点マッピングの引き当てキーになる。"
+    },
+    "kindDuties": {
+      "description": "種別ごとの記述義務。入力欄なのに桁数未定義、一覧なのに0件時挙動なし、といった観点漏れを、画面を書いた時点でバリデーションエラーにする。",
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "enum": ["テキスト入力", "テキストエリア"] } },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["constraints", "validations", "displayByState"],
+            "properties": { "constraints": { "required": ["maxLength"] } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "数値入力" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["constraints", "validations", "displayByState"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "日付入力" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["validations", "displayByState"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "enum": ["選択", "チェックボックス", "ラジオボタン", "ファイル入力", "ボタン", "リンク"] } },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["displayByState"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "一覧" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["emptyBehavior", "displayByState"]
+          }
+        }
+      ]
+    },
     "element": {
       "type": "object",
       "required": [
@@ -305,14 +510,16 @@
         "kind"
       ],
       "additionalProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/kindDuties" }
+      ],
       "properties": {
         "name": {
           "type": "string",
-          "description": "要素名。画面内で一意。これが識別キー。"
+          "description": "要素名。コンテナ内で一意。これが識別キー。"
         },
         "kind": {
-          "type": "string",
-          "description": "要素の種別（例: テキスト入力, ボタン, 表示テキスト）。"
+          "$ref": "#/$defs/kind"
         },
         "required": {
           "type": "boolean",
@@ -322,52 +529,19 @@
           "type": "string",
           "description": "要素の補足説明。"
         },
+        "emptyBehavior": {
+          "type": "string",
+          "minLength": 1,
+          "description": "一覧要素でデータが0件のときの表示・挙動（例: 「該当するプロジェクトがありません」と表示する）。kind が一覧のとき必須。"
+        },
+        "dataRef": {
+          "$ref": "#/$defs/dataRef"
+        },
         "constraints": {
-          "type": "object",
-          "description": "入力値の制約。テスト時の境界値はここから算出する。",
-          "additionalProperties": true,
-          "properties": {
-            "minLength": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "最小文字数。"
-            },
-            "maxLength": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "最大文字数。"
-            },
-            "format": {
-              "type": "string",
-              "description": "値の形式（例: email）。"
-            },
-            "blankOnly": {
-              "type": "boolean",
-              "description": "空白のみの入力を許すか。false なら許さない。"
-            }
-          }
+          "$ref": "#/$defs/constraints"
         },
         "validations": {
-          "type": "array",
-          "description": "入力検証。各エントリは「条件」と、その条件に当たったときの「メッセージ」。サーバ側判定（重複など）も区別せず、画面上のエラーの一つとして列挙する。",
-          "items": {
-            "type": "object",
-            "required": [
-              "condition",
-              "message"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "condition": {
-                "type": "string",
-                "description": "検証に引っかかる条件。"
-              },
-              "message": {
-                "type": "string",
-                "description": "条件に当たったとき画面に表示するメッセージ。"
-              }
-            }
-          }
+          "$ref": "#/$defs/validations"
         },
         "displayByState": {
           "type": "object",
@@ -385,14 +559,16 @@
         "kind"
       ],
       "additionalProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/kindDuties" }
+      ],
       "properties": {
         "name": {
           "type": "string",
           "description": "要素名。画面内で一意。これが識別キー。"
         },
         "kind": {
-          "type": "string",
-          "description": "要素の種別（例: テキスト入力, ボタン, 表示テキスト）。"
+          "$ref": "#/$defs/kind"
         },
         "required": {
           "type": "boolean",
@@ -402,52 +578,19 @@
           "type": "string",
           "description": "要素の補足説明。"
         },
+        "emptyBehavior": {
+          "type": "string",
+          "minLength": 1,
+          "description": "一覧要素でデータが0件のときの表示・挙動。kind が一覧のとき必須。"
+        },
+        "dataRef": {
+          "$ref": "#/$defs/dataRef"
+        },
         "constraints": {
-          "type": "object",
-          "description": "入力値の制約。テスト時の境界値はここから算出する。",
-          "additionalProperties": true,
-          "properties": {
-            "minLength": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "最小文字数。"
-            },
-            "maxLength": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "最大文字数。"
-            },
-            "format": {
-              "type": "string",
-              "description": "値の形式（例: email）。"
-            },
-            "blankOnly": {
-              "type": "boolean",
-              "description": "空白のみの入力を許すか。false なら許さない。"
-            }
-          }
+          "$ref": "#/$defs/constraints"
         },
         "validations": {
-          "type": "array",
-          "description": "入力検証。各エントリは「条件」と、その条件に当たったときの「メッセージ」。サーバ側判定（重複など）も区別せず、画面上のエラーの一つとして列挙する。",
-          "items": {
-            "type": "object",
-            "required": [
-              "condition",
-              "message"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "condition": {
-                "type": "string",
-                "description": "検証に引っかかる条件。"
-              },
-              "message": {
-                "type": "string",
-                "description": "条件に当たったとき画面に表示するメッセージ。"
-              }
-            }
-          }
+          "$ref": "#/$defs/validations"
         },
         "displayByState": {
           "type": "object",
@@ -465,6 +608,73 @@
         }
       },
       "description": "トップレベルの画面要素。children を持てばコンテナ、持たなければ単独要素。"
+    },
+    "dataRef": {
+      "type": "object",
+      "description": "この要素が読み書きするデータの参照先（テーブル・カラム）。入出力一覧の自動生成に使う。特定できなければ省略する。",
+      "additionalProperties": false,
+      "required": ["table"],
+      "properties": {
+        "table": {
+          "type": "string",
+          "description": "参照先のテーブル（またはリソース）名。"
+        },
+        "column": {
+          "type": "string",
+          "description": "参照先のカラム（または属性）名。"
+        },
+        "note": {
+          "type": "string",
+          "description": "補足（加工・集計がある場合など）。"
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "description": "入力値の制約。テスト時の境界値はここから算出する。",
+      "additionalProperties": true,
+      "properties": {
+        "minLength": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "最小文字数。"
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "最大文字数。"
+        },
+        "format": {
+          "type": "string",
+          "description": "値の形式（例: email）。"
+        },
+        "blankOnly": {
+          "type": "boolean",
+          "description": "空白のみの入力を許すか。false なら許さない。"
+        }
+      }
+    },
+    "validations": {
+      "type": "array",
+      "description": "入力検証。各エントリは「条件」と、その条件に当たったときの「メッセージ」。サーバ側判定（重複など）も区別せず、画面上のエラーの一つとして列挙する。",
+      "items": {
+        "type": "object",
+        "required": [
+          "condition",
+          "message"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "type": "string",
+            "description": "検証に引っかかる条件。"
+          },
+          "message": {
+            "type": "string",
+            "description": "条件に当たったとき画面に表示するメッセージ。"
+          }
+        }
+      }
     }
   }
 }

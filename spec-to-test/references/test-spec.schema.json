@@ -14,8 +14,9 @@
       "required": ["schemaVersion", "specId", "type", "status", "viewpoints"],
       "additionalProperties": false,
       "properties": {
-        "schemaVersion": { "const": "1.0" },
+        "schemaVersion": { "const": "1.1" },
         "specId": { "type": "string", "description": "導出元 screen-spec の id（例: SCR-030）" },
+        "commonSpecRef": { "type": "string", "description": "規則7で参照した共通仕様ファイル（screen-spec の commonSpec を転記）。共通仕様が無ければ省略。" },
         "title": { "type": "string" },
         "type": { "const": "test-spec" },
         "status": { "enum": ["draft", "reviewed", "fixed"] },
@@ -45,11 +46,11 @@
             "additionalProperties": false,
             "properties": {
               "id": { "type": "string", "description": "観点ID（例: T01）" },
-              "category": { "enum": ["入力値", "業務ロジック", "状態", "UI制御", "モーダル", "横断観点"] },
+              "category": { "enum": ["入力値", "業務ロジック", "状態", "UI制御", "モーダル", "横断観点", "共通仕様"] },
               "description": { "type": "string" },
               "technique": { "enum": ["同値分割+境界値", "同値分割", "デシジョンテーブル", "状態遷移", "状態別表示", "シナリオ", "単独確認"] },
               "targets": { "type": "array", "items": { "type": "string" }, "description": "対象要件/要素名（screen-spec の elements[].name 等）" },
-              "catalogIds": { "type": "array", "items": { "type": "string" }, "description": "横断観点の由来（例: H-I18N-01）。機能観点では空。" }
+              "catalogIds": { "type": "array", "items": { "type": "string" }, "description": "観点の由来。横断観点カタログのID（例: H-I18N-01）または共通仕様ルールのID（例: COM-003）。機能観点では空。" }
             }
           }
         },
@@ -183,7 +184,7 @@
         },
         "crossCuttingCoverage": {
           "type": "array",
-          "description": "横断観点カタログの適用状況。観点漏れ防止の核。全観点を applied/excluded/n_a で記録し、黙って落とさない。",
+          "description": "横断観点カタログと共通仕様ルールの適用状況。観点漏れ防止の核。全観点・全ルールを applied/excluded/n_a で記録し、黙って落とさない。",
           "items": {
             "type": "object",
             "required": ["target", "catalogId", "status"],
@@ -191,7 +192,7 @@
             "properties": {
               "target": { "type": "string", "description": "対象要素名 or '画面共通'" },
               "kind": { "type": "string", "description": "elements[].kind / 意味カテゴリ" },
-              "catalogId": { "type": "string", "description": "H-XXX-NN（範囲表記可: H-STR-01〜09）" },
+              "catalogId": { "type": "string", "description": "H-XXX-NN（範囲表記可: H-STR-01〜09）または共通仕様ルールの COM-NNN" },
               "status": { "enum": ["applied", "excluded", "n_a"] },
               "coveredBy": { "type": "string", "description": "applied のとき: viewpoint ID または無効クラスID" },
               "reason": { "type": "string", "description": "excluded/n_a のとき: project-profile の理由 または 非該当の理由" }
@@ -235,7 +236,7 @@
       "required": ["schemaVersion", "testSpecId", "type", "status", "cases"],
       "additionalProperties": false,
       "properties": {
-        "schemaVersion": { "const": "1.0" },
+        "schemaVersion": { "const": "1.1" },
         "testSpecId": { "type": "string" },
         "type": { "const": "test-items" },
         "status": { "enum": ["draft", "reviewed", "fixed"] },
