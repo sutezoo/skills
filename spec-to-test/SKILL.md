@@ -1,6 +1,6 @@
 ---
 name: spec-to-test
-description: screen-spec スキーマのJSON画面仕様書（と共通仕様・プロジェクトプロファイル）を入力に、テスト仕様書(test-spec)とテスト実施項目書(test-items)をJSONで導出するスキル。テストケースを洗い出す・テスト観点を作る・テスト設計をする・テスト仕様書やテスト項目書を作る、といった依頼で必ず使う。「この画面仕様からテストを作って」「テストケースを起こして」「テスト観点を網羅して」など、明示的に"テスト"の語が無くても、画面仕様(JSON)からテストを設計する文脈なら発火させる。同値分割/境界値分析/デシジョンテーブル/状態遷移といった技法をspecの構造から機械的に導出する。さらに、テスト観点の抜け漏れ・網羅性が心配、絵文字や長文字列の入力・二重送信・ゼロ件表示のような仕様に明記されない汎用観点（横断観点・共通仕様）を押さえたい、という文脈でも必ず使う。入力specが無いときは先に spec-from-code で生成する。
+description: screen-spec スキーマのJSON画面仕様書（と共通仕様・プロジェクトプロファイル）を入力に、テスト仕様書(test-spec)・テスト条件表(test-conditions)・テスト実施項目書(test-items)をJSONで導出するスキル。テスト条件表は「何を確かめるか」の全量列挙と「どのレベル（単体/コンポーネント/画面結合/E2E）で確かめるか」の振り分けを分離し、漏れ（未割り当て）と重複（複数レベル割り当て）を機械的に見えるようにする。テストレベルの振り分け・テストピラミッド・条件の割り出しといった文脈でも使う。テストケースを洗い出す・テスト観点を作る・テスト設計をする・テスト仕様書やテスト項目書を作る、といった依頼で必ず使う。「この画面仕様からテストを作って」「テストケースを起こして」「テスト観点を網羅して」など、明示的に"テスト"の語が無くても、画面仕様(JSON)からテストを設計する文脈なら発火させる。同値分割/境界値分析/デシジョンテーブル/状態遷移といった技法をspecの構造から機械的に導出する。さらに、テスト観点の抜け漏れ・網羅性が心配、絵文字や長文字列の入力・二重送信・ゼロ件表示のような仕様に明記されない汎用観点（横断観点・共通仕様）を押さえたい、という文脈でも必ず使う。入力specが無いときは先に spec-from-code で生成する。
 ---
 
 # spec-to-test
@@ -18,15 +18,16 @@ description: screen-spec スキーマのJSON画面仕様書（と共通仕様・
 
 | 成果物 | 問い | type | 由来 |
 | --- | --- | --- | --- |
-| テスト仕様書 (test-spec) | 何をテストするか（導出規則） | `test-spec` | screen-spec + 共通仕様 から導出 |
-| テスト実施項目書 (test-items) | どう実行するか（実行可能ケース） | `test-items` | test-spec を機械展開 |
+| テスト仕様書 (test-spec) | 何をテストするか（導出の詳細） | `test-spec` | screen-spec + 共通仕様 から導出 |
+| テスト条件表 (test-conditions) | 何を・どのレベルで確かめるか（振り分け） | `test-conditions` | 行は test-spec から機械導出。振り分けは人間が確定 |
+| テスト実施項目書 (test-items) | どう実行するか（実行可能ケース） | `test-items` | 手動レベルに割り当てた条件を機械展開 |
 
 **前提**: プロジェクトに1つ `project-profile.json`（横断観点の除外宣言）を用意しておく。
 共通仕様（common-spec.json）があれば入力に含める（screen-spec の `commonSpec` が指すファイル。
 0件表示・二重送信のような汎用観点の、プロジェクト固有の期待値の導出元になる）。
 入力の screen-spec は `spec-from-code` の責務。このスキルは spec を**書かない**。
 
-**鉄則: screen-spec(JSON) → test-spec(JSON) → test-items(JSON) の順。下層は上層から機械展開する。逆流させない。**
+**鉄則: screen-spec(JSON) → test-spec(JSON) → test-conditions(JSON) → test-items(JSON) の順。下層は上層から機械展開する。逆流させない。** 人間の判断が入るのはテスト条件表の列（振り分け・削減）だけで、行の集合は上層から機械的に決まる。
 
 ## 形式の約束
 
@@ -39,8 +40,9 @@ description: screen-spec スキーマのJSON画面仕様書（と共通仕様・
 - `references/test-spec.schema.json` — **出力の契約**。作業前に必ず読む。
 - `references/derivation-rules.md` — **screen-spec の各部位 → テスト技法への変換規則**。導出の心臓部。必ず読む。
 - `references/heuristics-catalog.md` — **横断観点カタログ**（文字種・絵文字・長文字列・二重送信・ゼロ件表示など、specに書かれない汎用観点の網羅リストと §16「kind → 観点マッピング」）。
-- `references/wording-rules.md` — **期待値・前提条件の記述品質規則**（観測可能・自己完結）。expected/precondition を書く STEP1・STEP2 で必ず読む。
-- `references/examples/example.test-spec.json` / `example.test-items.json` — SCR-030 の完成例（手本）。
+- `references/wording-rules.md` — **期待値・前提条件の記述品質規則**（観測可能・自己完結）。expected/precondition を書く STEP1・STEP3 で必ず読む。
+- `references/examples/example.test-spec.json` / `example.test-conditions.json` / `example.test-items.json` — SCR-030 の完成例（手本）。
+- `scripts/check_conditions.py` — テスト条件表の機械検査（closed world・トレーサビリティ・停止基準）。
 - `references/examples/example.project-profile.json` / `assets/template.project-profile.json` — 横断観点の除外宣言。
 - 入力 spec のスキーマ定義は `spec-from-code/references/screen-spec.schema.{json,md}`。
   共通仕様の契約は `spec-from-code/references/common-spec.schema.json`。
@@ -63,7 +65,7 @@ python <spec-from-codeのパス>/scripts/validate.py <spec.json> [--common-spec 
 ### ✅ STEP0 完了条件
 - [ ] 入力が screen-spec スキーマ（v2.0）に適合している
 - [ ] lint（全域性・参照の実在・排他）に違反がない
-- [ ] `undefined: true` の箇所を把握した（STEP2 で openIssues に隔離する）
+- [ ] `undefined: true` の箇所を把握した（STEP1 で openIssues に隔離する）
 - [ ] `notApplicable` のセルを把握した（テストを導出しない。規則3）
 - [ ] 共通仕様（commonSpec）の有無を確認した（あれば読み込む）
 
@@ -88,7 +90,7 @@ python <spec-from-codeのパス>/scripts/validate.py <spec.json> [--common-spec 
 - 観点は `viewpoints[]` に起こし、`category` と `technique` を宣言する（対応は derivation-rules の表）。
 - **境界値（機械的）**: 範囲が `min〜max` なら min-1 / min / max / max+1 の4点を必ず作る。
 - 各 class/boundary/rule/transition に一意なID（EC-/B/R/TR）。
-- **expected は観測可能・自己完結な文で起こす**（`wording-rules.md`）。「操作できること」のような痩せた表現にしない。ここで痩せると STEP2 の転記でも痩せたまま降りる。観測できる事実が spec にも共通仕様にも無いものは推測せず openIssues に回す。
+- **expected は観測可能・自己完結な文で起こす**（`wording-rules.md`）。「操作できること」のような痩せた表現にしない。ここで痩せると STEP3 の転記でも痩せたまま降りる。観測できる事実が spec にも共通仕様にも無いものは推測せず openIssues に回す。
 
 ### STEP 1B — 横断観点（カタログ由来・観点漏れ防止の核）
 
@@ -127,9 +129,44 @@ kind は enum なので引き当ては表と1対1で決まる。
 
 ---
 
-## STEP 2 — test-items を展開する
+## STEP 2 — テスト条件表（test-conditions）を作る
 
-**ほぼ機械作業。** test-spec の各導出行を1ケースに変換する（規則8）。ケースIDは連結で決まる:
+`derivation-rules.md` の規則8に従う。**行は機械・列は人間。**
+
+1. **行の導出（機械）**: test-spec の導出行（各 class・各 rule・各 transition・displayChecks の
+   各要素・横断/共通仕様の各 viewpoint）を1行1条件で列挙する。`derivedFrom` に行IDを書く。
+   boundaries は条件にしない（所属クラス条件のケース展開時の具体値）。条件文は観点のレベルに
+   とどめ、具体値・手順を書かない。
+2. **重複の統合**: 技法違いで同一の振る舞いを指す行（デシジョンテーブルのルールと同じ遷移を指す
+   stateTransition など）は、一方を `removed`（理由: 統合先の条件ID）にする。
+3. **振り分けの案（人間が確定）**: 各条件に `levels` を1つ提案する。配置の基準は「その振る舞いを
+   観測できる最も安いレベル」。スモークとして意図的に重複させる場合のみ `levels` を複数にし、
+   `duplicationReason` を書く。削る条件は `removed.reason` にリスクベースの理由を書く。
+4. **停止基準**: 画面結合レベルは、behaviorMatrix の状態を一度ずつ踏む状態網羅を上限の目安とする
+   （`stopCriterion` に明記）。超える条件は下位レベルへ降ろす。
+5. **表の外**: API 契約・DB 制約などの結合部固有の確認、非機能、探索的テストは `outOfScope` に
+   列挙し、この表では扱わない。
+6. `scripts/check_conditions.py <test-conditions.json> --test-spec <test-spec.json>` で検査する
+   （全条件が割り当て済みか理由付き削除済みか、derivedFrom の実在、test-spec 行の取りこぼし、
+   重複割り当ての理由、停止基準）。
+
+**振り分けは案として提示し、人間の確定（配置・削減の判断）を経てから STEP 3 に進む。**
+
+### ✅ STEP2 完了条件
+- [ ] test-spec の全導出行（boundaries を除く）が条件表の行になっている（check_conditions.py が検査）
+- [ ] 全条件が `levels`（割り当て済み）か `removed`（理由付き削除済み）のどちらかである
+- [ ] 複数レベルに割り当てた条件すべてに `duplicationReason` がある
+- [ ] 削除済みの条件すべてに理由がある（黙って消した行が無い）
+- [ ] 画面結合の割り当てが停止基準（状態網羅の目安）に収まっている
+- [ ] 振り分けの案を人間がレビュー・確定した
+
+---
+
+## STEP 3 — test-items を展開する
+
+**ほぼ機械作業。** テスト条件表で手動実施のレベル（既定: 画面結合・E2E）に割り当てられた条件だけを、
+test-spec の導出行からケースに変換する（規則9）。単体・コンポーネントに割り当てた条件は自動テスト
+コードとして実装する（この成果物の外）。ケースIDは連結で決まる:
 
 | 導出元 | ケースID | 例 |
 | --- | --- | --- |
@@ -137,18 +174,19 @@ kind は enum なので引き当ては表と1対1で決まる。
 | decisionTables の rule | `<viewpoint>-<ruleId>` | `T04-R3` |
 | stateTransitions の transition | `<viewpoint>-<transitionId>` | `T05-TR08` |
 | displayChecks の 要素×状態 | `<viewpoint>-<element>-<state>` | `T06-検索ボタン-検索中` |
-| 共通仕様ルール由来の観点 | `<viewpoint>-<ruleId>` | `T09-COM-003` |
+| 共通仕様ルール由来の観点 | `<viewpoint>-<ruleId>` | `T13-COM-005` |
 
 - 各ケースに precondition / input / operation / expected を埋める。`expected` は test-spec の expected/actions/message を転記。
 - **転記は痩せさせない**（`wording-rules.md`）。expected/precondition は観測可能・自己完結な文にする（「操作できること」「表示中状態」で止めない）。ただし整形に使えるのは **spec と共通仕様に実在する事実だけ**（要素名・状態名・メッセージ文言・共通仕様の statement）。観測できる期待値そのものがどちらにも無いものは、ここで埋めず openIssues 由来として扱い、推測で書かない。
 - `result` は空（実行時に pass/fail/blocked を記入）。
 
-### ✅ STEP2 完了条件
-- [ ] test-spec の全導出行が漏れなくケース化されている
+### ✅ STEP3 完了条件
+- [ ] 手動レベルに割り当てた全条件が漏れなくケース化されている（境界値を持つ条件は各境界点に展開）
+- [ ] 単体・コンポーネントに割り当てた条件のケースが混ざっていない
 - [ ] ケースIDがすべて「viewpoint-導出要素ID」
 - [ ] expected が空でない
 - [ ] expected / precondition が観測可能・自己完結（`wording-rules.md` のチェックリストを通る）
-- [ ] 同じ test-spec から作れば誰がやっても同じ cases 集合になる
+- [ ] 同じ test-spec と同じ振り分けから作れば誰がやっても同じ cases 集合になる
 
 ---
 
@@ -158,6 +196,9 @@ kind は enum なので引き当ては表と1対1で決まる。
 - **undefined を推測で埋める**: 確定不可は openIssues に隔離。テストケースにしない。
 - **notApplicable のセルからテストを作る**: 「発生し得ない」は仕様段階でレビュー済みの宣言。導出対象外（明示的な状態違反テストを足す場合のみ例外。規則3）。
 - **branches の取りこぼし**: 全 branch を1ルールずつ展開する。一部だけ作らない。
+- **テストレベルごとに独立して設計する**: レベルの境界に落ちる観点が漏れ、重複も見えなくなる。必ず条件表で全量を列挙してから振り分ける。
+- **条件を黙って削る・未割り当てのまま残す**: 削減は removed.reason（リスクベース）付きで記録する。「やらないと決めた」と「忘れた」を区別できなくなる。
+- **条件表に具体的なテストケースを書く**: 条件は観点のレベルまで。具体値・手順は配置先レベルの実装（test-items または自動テスト）で書く。
 - **横断観点・共通仕様ルールを黙って省く**: 当たる観点・ルールは、適用しないなら project-profile で理由付き除外、または crossCuttingCoverage に n_a（理由付き）。黙って消さない。
 - **overrides を無視して共通仕様の期待値を使う**: 画面が overrides で逸脱を宣言しているルールは、期待値をその behavior にする。
 - **実装語の混入**: screen-spec が翻訳済みの言葉を使う。HTTPステータス番号・関数名を expected に書かない。
@@ -170,3 +211,5 @@ kind は enum なので引き当ては表と1対1で決まる。
 - **横断観点**: spec に明記されないが汎用的に確認すべき観点（文字種・絵文字・レイアウト・操作遷移・並行・通信・環境など）。`heuristics-catalog.md` で網羅的に持ち、kind マッピングで機械適用する。
 - **共通仕様**: 日付フォーマット・エラー表示方式・二重送信防止のような画面横断の振る舞いを一箇所に定義したファイル（common-spec.json）。各画面は暗黙に継承し、逸脱は overrides で宣言される。横断観点のうちプロジェクト固有の期待値を持つものの導出元。
 - **project-profile**: 横断観点カタログからの除外を、プロジェクト共通で理由付きに宣言するJSON。取捨選択を裁量でなくルール化するためのもの。
+- **テスト条件 / テスト条件表**: 確かめるべき振る舞いの観点（条件）を全量列挙し、テストレベル（単体・コンポーネント・画面結合・E2E）へ振り分ける表。漏れ=未割り当ての行、重複=複数レベルに割り当てられた行、として機械的に見える。
+- **テストレベル**: 単体（関数・クラス）、コンポーネント（UI部品をモック応答で）、画面結合（フロント+APIを通した画面）、E2E（実環境の一連の流れ）。条件はその振る舞いを観測できる最も安いレベルに置く。

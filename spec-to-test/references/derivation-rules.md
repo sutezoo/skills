@@ -154,22 +154,72 @@ kind は screen-spec v2.0 で enum になったため、マッピングの引き
 
 ---
 
-## 規則8: test-spec → test-items（ケースの機械展開）
+## 規則8: test-spec → テスト条件表（test-conditions）
 
-test-spec の各導出行を1ケースに変換する。ケースIDは連結で決まる（一意性の核）:
+「何を確かめるべきか」（行）の割り出しと「どのレベルで確かめるか」（列）の決定を分離する。
+テストレベル（単体・コンポーネント・画面結合・E2E）ごとに独立して設計すると、レベルの境界に落ちる
+観点は誰の担当でもないため漏れ、同じ観点を複数レベルで確かめる重複も検出できない。そこで先に
+テスト条件の全量を一枚に列挙し、それから各レベルへ振り分ける。漏れは「未割り当ての行」、重複は
+「複数レベルに割り当てられた行」として機械的に見える。
+
+**行（条件）の導出は機械的に行う。** test-spec の導出行と1対1で対応させ、`derivedFrom` に行IDを書く:
+
+| test-spec の導出行 | 1行 = 1条件 | derivedFrom の例 |
+| --- | --- | --- |
+| equivalenceClasses の各 class | 有効/無効クラスごと | `T01-EC-I01` |
+| decisionTables の各 rule | ルールごと | `T04-R2` |
+| stateTransitions の各 transition | 遷移ごと | `T05-TR07` |
+| displayChecks の各要素 | 要素ごと（状態×表示のマトリクス確認を1条件に束ねる） | `T06-検索ボタン` |
+| 横断観点・共通仕様の viewpoint | 観点ごと | `T09`, `T07` |
+
+- boundaries は独立した条件にしない。境界値は所属するクラス条件のケース展開時の具体値であり、
+  「ケースの形」に属するためである。
+- 条件文は観点のレベルにとどめる（例: 「名前フィルタが100文字を超える入力を拒否する」）。具体値・
+  手順は書かない。ケースの形は配置先のレベルで変わる。
+- 技法違いで同一の振る舞いを指す行（例: デシジョンテーブルのルールと同じ遷移を指す
+  stateTransition）は、条件表の上で重複として見えるので、一方を `removed`（理由: 統合先の条件ID）
+  にして統合する。
+
+**列（振り分け・削減）は人間の判断。** スキルは振り分けの案を出し、人間がレビューして確定する。
+
+- **配置**: その振る舞いを観測できる最も安いレベルに置く（`levels` に1つ）。
+- **一意性**: 一つの条件は原則一つのレベルだけ。スモークとして意図的に重複させる場合は `levels` を
+  複数にし、`duplicationReason` を必ず書く。
+- **削減**: 削る条件は黙って消さず、`removed.reason` にリスクベース（壊れたときの影響と壊れやすさ）
+  の理由を書いて残す。
+- **全域性（closed world）**: 全条件が「割り当て済み（levels）」か「理由付き削除済み（removed）」の
+  どちらかであること。スキーマと `scripts/check_conditions.py` が検査する。「やらないと決めた」と
+  「忘れた」を区別するための仕組みである。
+- **停止基準**: 画面結合レベルの割り当て量は、behaviorMatrix の状態を一度ずつ踏む状態網羅を上限の
+  目安とする（`stopCriterion` に明記）。超えて増やしたくなった条件は下位レベルへ降ろす。
+
+この表が扱うのは仕様由来の振る舞い条件に限る。API 契約や DB 制約のような結合部固有の確認、性能など
+の非機能、仕様に書かれていないものを探す探索的テストは、`outOfScope` に列挙したうえで、この表の外に
+レベル固有のテストとして足す。
+
+---
+
+## 規則9: テスト条件表 + test-spec → test-items（ケースの機械展開）
+
+**test-items が扱うのは、テスト条件表で手動実施のレベル（既定: 画面結合・E2E）に割り当てられた条件
+だけ。** 単体・コンポーネントに割り当てた条件は、自動テストコードとして実装する（この成果物の外）。
+
+対象条件の `derivedFrom` が指す test-spec の導出行を1ケース以上に変換する。ケースIDは連結で決まる
+（一意性の核）:
 
 | 導出元 | ケースID | 例 |
 | --- | --- | --- |
 | equivalenceClasses の class | `<viewpoint>-<classId>` | `T01-EC-I02` |
 | equivalenceClasses の boundary | `<viewpoint>-<boundaryId>` | `T01-B03` |
 | decisionTables の rule | `<viewpoint>-<ruleId>` | `T03-R2` |
-| stateTransitions の transition | `<viewpoint>-<transitionId>` | `T05-TR02` |
+| stateTransitions の transition | `<viewpoint>-<transitionId>` | `T05-TR07` |
 | displayChecks の (要素×状態) | `<viewpoint>-<element>-<state>` | `T06-検索ボタン-検索中` |
-| 共通仕様ルール由来の観点 | `<viewpoint>-<ruleId>` | `T09-COM-003` |
+| 横断観点・共通仕様の viewpoint | `<viewpoint>` / `<viewpoint>-<ruleId>` | `T09`, `T13-COM-005` |
 
+- 境界値を持つクラス条件は、境界の各点を1ケースずつに展開する（条件1行 → ケース複数はここで起きる）。
 - `expected` は test-spec の `expected`/`actions`/`message` をそのまま転記。
 - `result` は空（実行時に pass/fail/blocked を記入）。
-- **同じ test-spec から作れば、誰がやっても同じ cases 集合になる**こと。
+- **同じ test-spec と同じ振り分けから作れば、誰がやっても同じ cases 集合になる**こと。
 
 ---
 

@@ -2,39 +2,90 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/schemas/test-spec.schema.json",
   "title": "テスト成果物スキーマ（test-spec / test-items）",
-  "description": "spec-to-test が screen-spec(JSON) から導出するテスト仕様書・テスト実施項目書の契約。type で2種を切り替える。",
+  "description": "spec-to-test が screen-spec(JSON) から導出するテスト仕様書・テスト条件表・テスト実施項目書の契約。type で3種を切り替える。",
   "oneOf": [
-    { "$ref": "#/$defs/testSpec" },
-    { "$ref": "#/$defs/testItems" }
+    {
+      "$ref": "#/$defs/testSpec"
+    },
+    {
+      "$ref": "#/$defs/testConditions"
+    },
+    {
+      "$ref": "#/$defs/testItems"
+    }
   ],
   "$defs": {
     "testSpec": {
       "type": "object",
       "description": "テスト仕様書: 何をテストするか（導出規則）。具体手順・実行記録は持たない。",
-      "required": ["schemaVersion", "specId", "type", "status", "viewpoints"],
+      "required": [
+        "schemaVersion",
+        "specId",
+        "type",
+        "status",
+        "viewpoints"
+      ],
       "additionalProperties": false,
       "properties": {
-        "schemaVersion": { "const": "1.1" },
-        "specId": { "type": "string", "description": "導出元 screen-spec の id（例: SCR-030）" },
-        "commonSpecRef": { "type": "string", "description": "規則7で参照した共通仕様ファイル（screen-spec の commonSpec を転記）。共通仕様が無ければ省略。" },
-        "title": { "type": "string" },
-        "type": { "const": "test-spec" },
-        "status": { "enum": ["draft", "reviewed", "fixed"] },
+        "schemaVersion": {
+          "const": "1.1"
+        },
+        "specId": {
+          "type": "string",
+          "description": "導出元 screen-spec の id（例: SCR-030）"
+        },
+        "commonSpecRef": {
+          "type": "string",
+          "description": "規則7で参照した共通仕様ファイル（screen-spec の commonSpec を転記）。共通仕様が無ければ省略。"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "const": "test-spec"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "fixed"
+          ]
+        },
         "scope": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "in": { "type": "array", "items": { "type": "string" } },
-            "out": { "type": "array", "items": { "type": "string" } }
+            "in": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "out": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         },
         "preconditions": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "environment": { "type": "string" },
-            "data": { "type": "array", "items": { "type": "string" } },
-            "initialState": { "type": "string", "description": "screen-spec の states[].name に対応" }
+            "environment": {
+              "type": "string"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "initialState": {
+              "type": "string",
+              "description": "screen-spec の states[].name に対応"
+            }
           }
         },
         "viewpoints": {
@@ -42,15 +93,57 @@
           "description": "テスト観点。機能観点(spec由来)と横断観点(カタログ由来)を統合して持つ。",
           "items": {
             "type": "object",
-            "required": ["id", "category", "description", "technique"],
+            "required": [
+              "id",
+              "category",
+              "description",
+              "technique"
+            ],
             "additionalProperties": false,
             "properties": {
-              "id": { "type": "string", "description": "観点ID（例: T01）" },
-              "category": { "enum": ["入力値", "業務ロジック", "状態", "UI制御", "モーダル", "横断観点", "共通仕様"] },
-              "description": { "type": "string" },
-              "technique": { "enum": ["同値分割+境界値", "同値分割", "デシジョンテーブル", "状態遷移", "状態別表示", "シナリオ", "単独確認"] },
-              "targets": { "type": "array", "items": { "type": "string" }, "description": "対象要件/要素名（screen-spec の elements[].name 等）" },
-              "catalogIds": { "type": "array", "items": { "type": "string" }, "description": "観点の由来。横断観点カタログのID（例: H-I18N-01）または共通仕様ルールのID（例: COM-003）。機能観点では空。" }
+              "id": {
+                "type": "string",
+                "description": "観点ID（例: T01）"
+              },
+              "category": {
+                "enum": [
+                  "入力値",
+                  "業務ロジック",
+                  "状態",
+                  "UI制御",
+                  "モーダル",
+                  "横断観点",
+                  "共通仕様"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "technique": {
+                "enum": [
+                  "同値分割+境界値",
+                  "同値分割",
+                  "デシジョンテーブル",
+                  "状態遷移",
+                  "状態別表示",
+                  "シナリオ",
+                  "単独確認"
+                ]
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "対象要件/要素名（screen-spec の elements[].name 等）"
+              },
+              "catalogIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "観点の由来。横断観点カタログのID（例: H-I18N-01）または共通仕様ルールのID（例: COM-003）。機能観点では空。"
+              }
             }
           }
         },
@@ -59,23 +152,52 @@
           "description": "同値分割・境界値。screen-spec の elements[].constraints / validations から導出。",
           "items": {
             "type": "object",
-            "required": ["viewpoint", "element", "classes"],
+            "required": [
+              "viewpoint",
+              "element",
+              "classes"
+            ],
             "additionalProperties": false,
             "properties": {
-              "viewpoint": { "type": "string" },
-              "element": { "type": "string" },
+              "viewpoint": {
+                "type": "string"
+              },
+              "element": {
+                "type": "string"
+              },
               "classes": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["id", "kind", "condition", "expected"],
+                  "required": [
+                    "id",
+                    "kind",
+                    "condition",
+                    "expected"
+                  ],
                   "additionalProperties": false,
                   "properties": {
-                    "id": { "type": "string", "description": "EC-V01 / EC-I01" },
-                    "kind": { "enum": ["valid", "invalid"] },
-                    "condition": { "type": "string" },
-                    "expected": { "type": "string", "description": "期待される扱い。validations[].message を転記しうる。" },
-                    "catalogId": { "type": "string", "description": "横断観点を吸収した無効クラスならその由来（例: H-I18N-01）" }
+                    "id": {
+                      "type": "string",
+                      "description": "EC-V01 / EC-I01"
+                    },
+                    "kind": {
+                      "enum": [
+                        "valid",
+                        "invalid"
+                      ]
+                    },
+                    "condition": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string",
+                      "description": "期待される扱い。validations[].message を転記しうる。"
+                    },
+                    "catalogId": {
+                      "type": "string",
+                      "description": "横断観点を吸収した無効クラスならその由来（例: H-I18N-01）"
+                    }
                   }
                 }
               },
@@ -83,13 +205,35 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["id", "input", "kind", "expected"],
+                  "required": [
+                    "id",
+                    "input",
+                    "kind",
+                    "expected"
+                  ],
                   "additionalProperties": false,
                   "properties": {
-                    "id": { "type": "string", "description": "B01..." },
-                    "input": { "type": "string", "description": "境界の実値（例: 49, 50, 51）" },
-                    "kind": { "enum": ["下限直前", "下限境界", "上限境界", "上限直後", "有効直前", "有効直後"] },
-                    "expected": { "type": "string" }
+                    "id": {
+                      "type": "string",
+                      "description": "B01..."
+                    },
+                    "input": {
+                      "type": "string",
+                      "description": "境界の実値（例: 49, 50, 51）"
+                    },
+                    "kind": {
+                      "enum": [
+                        "下限直前",
+                        "下限境界",
+                        "上限境界",
+                        "上限直後",
+                        "有効直前",
+                        "有効直後"
+                      ]
+                    },
+                    "expected": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -101,27 +245,62 @@
           "description": "デシジョンテーブル。screen-spec の behaviorMatrix[].on[].branches から導出（1 branch = 1 ルール）。",
           "items": {
             "type": "object",
-            "required": ["viewpoint", "name", "conditions", "rules"],
+            "required": [
+              "viewpoint",
+              "name",
+              "conditions",
+              "rules"
+            ],
             "additionalProperties": false,
             "properties": {
-              "viewpoint": { "type": "string" },
-              "name": { "type": "string" },
-              "conditions": { "type": "array", "items": { "type": "string" } },
+              "viewpoint": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
               "rules": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["id", "values", "actions"],
+                  "required": [
+                    "id",
+                    "values",
+                    "actions"
+                  ],
                   "additionalProperties": false,
                   "properties": {
-                    "id": { "type": "string", "description": "R1, R2..." },
+                    "id": {
+                      "type": "string",
+                      "description": "R1, R2..."
+                    },
                     "values": {
                       "type": "object",
                       "description": "条件名 → 'T' | 'F' | '-'",
-                      "additionalProperties": { "enum": ["T", "F", "-"] }
+                      "additionalProperties": {
+                        "enum": [
+                          "T",
+                          "F",
+                          "-"
+                        ]
+                      }
                     },
-                    "actions": { "type": "array", "items": { "type": "string" } },
-                    "message": { "type": "string", "description": "branch の message を転記（期待文言）" }
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "branch の message を転記（期待文言）"
+                    }
                   }
                 }
               }
@@ -133,23 +312,49 @@
           "description": "状態遷移。screen-spec の behaviorMatrix の state×event×to から導出。",
           "items": {
             "type": "object",
-            "required": ["viewpoint", "transitions"],
+            "required": [
+              "viewpoint",
+              "transitions"
+            ],
             "additionalProperties": false,
             "properties": {
-              "viewpoint": { "type": "string" },
+              "viewpoint": {
+                "type": "string"
+              },
               "transitions": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["id", "from", "event", "to"],
+                  "required": [
+                    "id",
+                    "from",
+                    "event",
+                    "to"
+                  ],
                   "additionalProperties": false,
                   "properties": {
-                    "id": { "type": "string", "description": "TR01..." },
-                    "from": { "type": "string" },
-                    "event": { "type": "string" },
-                    "to": { "type": ["string", "null"] },
-                    "process": { "type": "string" },
-                    "note": { "type": "string" }
+                    "id": {
+                      "type": "string",
+                      "description": "TR01..."
+                    },
+                    "from": {
+                      "type": "string"
+                    },
+                    "event": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "process": {
+                      "type": "string"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -161,21 +366,43 @@
           "description": "状態別の表示・操作可否。screen-spec の elements[].displayByState から導出。",
           "items": {
             "type": "object",
-            "required": ["viewpoint", "element", "byState"],
+            "required": [
+              "viewpoint",
+              "element",
+              "byState"
+            ],
             "additionalProperties": false,
             "properties": {
-              "viewpoint": { "type": "string" },
-              "element": { "type": "string" },
+              "viewpoint": {
+                "type": "string"
+              },
+              "element": {
+                "type": "string"
+              },
               "byState": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["state", "visibility"],
+                  "required": [
+                    "state",
+                    "visibility"
+                  ],
                   "additionalProperties": false,
                   "properties": {
-                    "state": { "type": "string" },
-                    "visibility": { "enum": ["hidden", "visible", "operable", "conditional"] },
-                    "condition": { "type": "string" }
+                    "state": {
+                      "type": "string"
+                    },
+                    "visibility": {
+                      "enum": [
+                        "hidden",
+                        "visible",
+                        "operable",
+                        "conditional"
+                      ]
+                    },
+                    "condition": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -187,15 +414,40 @@
           "description": "横断観点カタログと共通仕様ルールの適用状況。観点漏れ防止の核。全観点・全ルールを applied/excluded/n_a で記録し、黙って落とさない。",
           "items": {
             "type": "object",
-            "required": ["target", "catalogId", "status"],
+            "required": [
+              "target",
+              "catalogId",
+              "status"
+            ],
             "additionalProperties": false,
             "properties": {
-              "target": { "type": "string", "description": "対象要素名 or '画面共通'" },
-              "kind": { "type": "string", "description": "elements[].kind / 意味カテゴリ" },
-              "catalogId": { "type": "string", "description": "H-XXX-NN（範囲表記可: H-STR-01〜09）または共通仕様ルールの COM-NNN" },
-              "status": { "enum": ["applied", "excluded", "n_a"] },
-              "coveredBy": { "type": "string", "description": "applied のとき: viewpoint ID または無効クラスID" },
-              "reason": { "type": "string", "description": "excluded/n_a のとき: project-profile の理由 または 非該当の理由" }
+              "target": {
+                "type": "string",
+                "description": "対象要素名 or '画面共通'"
+              },
+              "kind": {
+                "type": "string",
+                "description": "elements[].kind / 意味カテゴリ"
+              },
+              "catalogId": {
+                "type": "string",
+                "description": "H-XXX-NN（範囲表記可: H-STR-01〜09）または共通仕様ルールの COM-NNN"
+              },
+              "status": {
+                "enum": [
+                  "applied",
+                  "excluded",
+                  "n_a"
+                ]
+              },
+              "coveredBy": {
+                "type": "string",
+                "description": "applied のとき: viewpoint ID または無効クラスID"
+              },
+              "reason": {
+                "type": "string",
+                "description": "excluded/n_a のとき: project-profile の理由 または 非該当の理由"
+              }
             }
           }
         },
@@ -204,14 +456,31 @@
           "description": "E2E観点。1シナリオ1挙動。then は状態・表示の宣言（操作を書かない）。",
           "items": {
             "type": "object",
-            "required": ["id", "title", "given", "when", "then"],
+            "required": [
+              "id",
+              "title",
+              "given",
+              "when",
+              "then"
+            ],
             "additionalProperties": false,
             "properties": {
-              "id": { "type": "string", "description": "SC-001..." },
-              "title": { "type": "string" },
-              "given": { "type": "string" },
-              "when": { "type": "string" },
-              "then": { "type": "string" }
+              "id": {
+                "type": "string",
+                "description": "SC-001..."
+              },
+              "title": {
+                "type": "string"
+              },
+              "given": {
+                "type": "string"
+              },
+              "when": {
+                "type": "string"
+              },
+              "then": {
+                "type": "string"
+              }
             }
           }
         },
@@ -220,11 +489,19 @@
           "description": "未決事項。screen-spec の undefined:true 箇所はここへ。",
           "items": {
             "type": "object",
-            "required": ["ref", "note"],
+            "required": [
+              "ref",
+              "note"
+            ],
             "additionalProperties": false,
             "properties": {
-              "ref": { "type": "string", "description": "対象（state/event/element/branch）" },
-              "note": { "type": "string" }
+              "ref": {
+                "type": "string",
+                "description": "対象（state/event/element/branch）"
+              },
+              "note": {
+                "type": "string"
+              }
             }
           }
         }
@@ -233,27 +510,248 @@
     "testItems": {
       "type": "object",
       "description": "テスト実施項目書: test-spec の各導出行を1ケースに機械展開した実行可能項目。result は実行時に記入。",
-      "required": ["schemaVersion", "testSpecId", "type", "status", "cases"],
+      "required": [
+        "schemaVersion",
+        "testSpecId",
+        "type",
+        "status",
+        "cases"
+      ],
       "additionalProperties": false,
       "properties": {
-        "schemaVersion": { "const": "1.1" },
-        "testSpecId": { "type": "string" },
-        "type": { "const": "test-items" },
-        "status": { "enum": ["draft", "reviewed", "fixed"] },
+        "schemaVersion": {
+          "const": "1.1"
+        },
+        "testSpecId": {
+          "type": "string"
+        },
+        "type": {
+          "const": "test-items"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "fixed"
+          ]
+        },
         "cases": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "viewpoint", "input", "operation", "expected"],
+            "required": [
+              "id",
+              "viewpoint",
+              "input",
+              "operation",
+              "expected"
+            ],
             "additionalProperties": false,
             "properties": {
-              "id": { "type": "string", "description": "観点ID-導出要素ID（例: T01-B03, T03-R2, T05-TR02）" },
-              "viewpoint": { "type": "string" },
-              "precondition": { "type": "string" },
-              "input": { "type": "string" },
-              "operation": { "type": "string" },
-              "expected": { "type": "string", "description": "test-spec の expected/actions/message を転記" },
-              "result": { "enum": ["", "pass", "fail", "blocked"], "default": "", "description": "実行記録。生成時は空。" }
+              "id": {
+                "type": "string",
+                "description": "観点ID-導出要素ID（例: T01-B03, T03-R2, T05-TR02）"
+              },
+              "viewpoint": {
+                "type": "string"
+              },
+              "precondition": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "string",
+                "description": "test-spec の expected/actions/message を転記"
+              },
+              "result": {
+                "enum": [
+                  "",
+                  "pass",
+                  "fail",
+                  "blocked"
+                ],
+                "default": "",
+                "description": "実行記録。生成時は空。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "testConditions": {
+      "type": "object",
+      "description": "テスト条件表: 「何を確かめるべきか」（行=テスト条件）の割り出しと「どのレベルで確かめるか」（列=振り分け）の決定を分離する表。行は test-spec の導出行から機械生成し、振り分け・削減は人間が判断する。全条件が「割り当て済み（levels）」か「理由付き削除済み（removed）」のどちらかであること（closed world）。",
+      "required": [
+        "schemaVersion",
+        "specId",
+        "testSpecId",
+        "type",
+        "status",
+        "conditions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0"
+        },
+        "specId": {
+          "type": "string",
+          "description": "導出元 screen-spec の id（例: SCR-030）"
+        },
+        "testSpecId": {
+          "type": "string",
+          "description": "行の導出元 test-spec の specId"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "const": "test-conditions"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "fixed"
+          ]
+        },
+        "stopCriterion": {
+          "type": "string",
+          "description": "画面結合レベルの割り当て量の停止基準（例: behaviorMatrix の状態を一度ずつ踏む状態網羅を上限の目安とし、超える条件は下位レベルへ降ろす）"
+        },
+        "outOfScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "この表の外でレベル固有のテストとして扱うもの（API契約・DB制約などの結合部固有の確認、性能などの非機能、探索的テスト）。"
+        },
+        "conditions": {
+          "type": "array",
+          "description": "テスト条件（確かめるべき振る舞いの観点）。具体的なテストケースの形までは書かない（ケースの形は配置先のレベルで変わる）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "condition",
+              "derivedFrom"
+            ],
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "levels"
+                ],
+                "not": {
+                  "required": [
+                    "removed"
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "removed"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "levels"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "duplicationReason"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "required": [
+                    "levels"
+                  ],
+                  "properties": {
+                    "levels": {
+                      "minItems": 2
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "duplicationReason"
+                  ]
+                }
+              }
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^TC-[0-9]{2,}$",
+                "description": "条件ID（TC-01...）。表内で一意"
+              },
+              "condition": {
+                "type": "string",
+                "description": "確かめるべき振る舞いの観点（例: 名前フィルタが100文字を超える入力を拒否する）。ケースの形（具体値・手順）は書かない"
+              },
+              "derivedFrom": {
+                "type": "string",
+                "description": "test-spec の導出行ID（例: T01-EC-I01, T04-R2, T05-TR07, T06-検索ボタン, T09）。トレーサビリティの核"
+              },
+              "source": {
+                "enum": [
+                  "equivalenceClass",
+                  "decisionRule",
+                  "stateTransition",
+                  "displayCheck",
+                  "crossCutting",
+                  "commonSpec"
+                ],
+                "description": "導出元の部位"
+              },
+              "levels": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "単体",
+                    "コンポーネント",
+                    "画面結合",
+                    "E2E"
+                  ]
+                },
+                "description": "割り当てレベル。原則1つ（その振る舞いを観測できる最も安いレベル）。複数に割り当てる場合は duplicationReason が必須"
+              },
+              "duplicationReason": {
+                "type": "string",
+                "description": "複数レベルに意図的に重複させる理由（例: スモークとして実機でも1回確認する）。levels が2つ以上のとき必須"
+              },
+              "removed": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "description": "削減の記録。黙って消さず、リスクベース（壊れたときの影響と壊れやすさ）または重複統合の理由を残す",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "description": "削除理由（例: 壊れても影響が小さく他条件で常時触るため / T04-R1 と同一の振る舞いのため統合）"
+                  }
+                }
+              },
+              "note": {
+                "type": "string"
+              }
             }
           }
         }
