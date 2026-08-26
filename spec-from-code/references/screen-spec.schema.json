@@ -342,7 +342,7 @@
           "type": "object",
           "required": ["reason"],
           "additionalProperties": false,
-          "description": "この状態ではこのイベントが発生し得ないことの宣言。『書き忘れ』と区別するための一級市民。発生し得るが何も起きない場合はこれを使わず process「何もしない」で書く。",
+          "description": "この状態ではこのイベントが発生し得ないことの宣言。『書き忘れ』と区別するための正式な値。発生し得るが何も起きない場合はこれを使わず process「何もしない」で書く。",
           "properties": {
             "reason": {
               "type": "string",

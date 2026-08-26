@@ -7,24 +7,8 @@
 各ファイル単体の検証（スキーマ適合・全域性など）は validate.py が行う。CI では両方を回す。
 使い方: python lint_screens.py <specディレクトリまたはspec.json...> [--roots SCR-001,SCR-010]
 """
-import sys, json, os, glob, argparse
-
-def load_specs(paths):
-    files = []
-    for p in paths:
-        if os.path.isdir(p):
-            files += sorted(glob.glob(os.path.join(p, "*.json")))
-        else:
-            files.append(p)
-    specs = {}
-    for f in files:
-        try:
-            d = json.load(open(f, encoding="utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            continue
-        if d.get("type") == "screen" and "id" in d:
-            specs.setdefault(d["id"], []).append((f, d))
-    return specs
+import sys, argparse
+from spec_loading import load_screen_specs
 
 def main():
     ap = argparse.ArgumentParser()
@@ -32,9 +16,14 @@ def main():
     ap.add_argument("--roots", default="", help="入口画面ID（カンマ区切り）。ここに挙げた画面は孤立扱いにしない")
     args = ap.parse_args()
 
-    specs = load_specs(args.paths)
+    loaded, bad = load_screen_specs(args.paths)
+    specs = {}
+    for f, d in loaded:
+        specs.setdefault(d["id"], []).append((f, d))
     roots = {r.strip() for r in args.roots.split(",") if r.strip()}
-    errs, warns, infos = [], [], []
+    errs, infos = [], []
+    for f, e in bad:
+        errs.append(f"JSONとして読めない: {f}（{e}）")
 
     # IDの一意性
     for sid, entries in specs.items():
@@ -71,12 +60,14 @@ def main():
         _, d = entries[0]
         nav = d.get("navigation") or {}
         declared_out = {xp.get("to") for xp in nav.get("exitPoints", [])}
+        declared_in = {ep.get("from") for ep in nav.get("entryPoints", [])}
         for (a, b) in edges:
             if a == sid and b not in declared_out:
                 infos.append(f"{sid}: {b} 側の entryPoints にだけ {sid}→{b} の遷移がある（exitPoints への転記漏れの可能性）")
+            if b == sid and a not in declared_in:
+                infos.append(f"{sid}: {a} 側の exitPoints にだけ {a}→{sid} の遷移がある（entryPoints への転記漏れの可能性）")
 
     for e in errs: print("[ERROR]", e)
-    for w in warns: print("[WARN]", w)
     for i in infos: print("[INFO]", i)
     print(f"画面 {len(ids)} 件 / 遷移 {len(edges)} 件 / エラー {len(errs)} 件")
     sys.exit(1 if errs else 0)

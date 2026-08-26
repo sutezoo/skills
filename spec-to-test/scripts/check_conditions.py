@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """テスト条件表（test-conditions.json）の機械検査。
   - スキーマ適合（jsonschema があれば）
-  - closed world: 全条件が levels（割り当て済み）か removed（理由付き削除済み）のどちらか
+  - 割り当ての完全性（closed world）: 全条件が levels（割り当て済み）か removed（理由付き削除済み）のどちらか
   - 複数レベル割り当てには duplicationReason が必須
   - derivedFrom が test-spec の導出行に実在する
   - test-spec の導出行（boundaries を除く）に対応する条件行が漏れなくある
@@ -11,21 +11,27 @@
 import sys, json, os, argparse
 
 def testspec_rows(ts):
-    """test-spec から条件の導出元となる行IDの集合を返す。boundaries は含めない。"""
-    rows = set()
+    """test-spec から条件の導出元となる行IDの集合を返す。boundaries は含めない。
+    表セクション（EC/DT/ST/DC）に行を持たない viewpoint（横断観点・共通仕様・
+    emptyBehavior 由来の単独確認など）は、viewpoint ID そのものが1行になる。"""
+    rows, table_vps = set(), set()
     for ec in ts.get("equivalenceClasses", []):
+        table_vps.add(ec["viewpoint"])
         for c in ec.get("classes", []):
             rows.add(f'{ec["viewpoint"]}-{c["id"]}')
     for dt in ts.get("decisionTables", []):
+        table_vps.add(dt["viewpoint"])
         for r in dt.get("rules", []):
             rows.add(f'{dt["viewpoint"]}-{r["id"]}')
     for st in ts.get("stateTransitions", []):
+        table_vps.add(st["viewpoint"])
         for tr in st.get("transitions", []):
             rows.add(f'{st["viewpoint"]}-{tr["id"]}')
     for dc in ts.get("displayChecks", []):
+        table_vps.add(dc["viewpoint"])
         rows.add(f'{dc["viewpoint"]}-{dc["element"]}')
     for v in ts.get("viewpoints", []):
-        if v.get("category") in ("横断観点", "共通仕様"):
+        if v["id"] not in table_vps:
             rows.add(v["id"])
     return rows
 

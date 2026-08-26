@@ -9,11 +9,8 @@
 """
 import sys, json, os, re, argparse
 
-BEHAVIOR_KEYS = ("process", "to", "branches", "undefined", "notApplicable")
-
 def behavior_group(o):
     """振る舞いがどのグループか。defined / branches / undefined / notApplicable / (不明はNone)"""
-    present = [k for k in BEHAVIOR_KEYS if k in o]
     has_defined = ("process" in o) or ("to" in o)
     groups = set()
     if has_defined: groups.add("defined")
@@ -131,7 +128,7 @@ def semantic_errors(d, common_rules=None):
             if rules_seen.count(r) > 1:
                 errs.append(f"overrides にルール「{r}」の宣言が複数ある")
         if common_rules is None:
-            errs.append("overrides があるが共通仕様が見つからない（--common-spec を指定するか、spec の commonSpec にパスを書く）")
+            errs.append("overrides があるが共通仕様が指定されていない（spec の commonSpec にパスを書くか、--common-spec で渡す）")
         else:
             for r in rules_seen:
                 if r not in common_rules:
@@ -156,12 +153,17 @@ def impl_leak(d):
     return leaks
 
 def load_common_rules(spec_path, d, common_spec_arg):
-    """共通仕様を読み、ルールID集合を返す。見つからなければ None。"""
-    path = common_spec_arg
-    if not path and d.get("commonSpec"):
+    """共通仕様を読み、(ルールID集合, パス) を返す。指定が無ければ (None, None)。
+    指定されたパスのファイルが無い場合は、黙って無視せずエラーで終了する。"""
+    if common_spec_arg:
+        path, origin = common_spec_arg, "--common-spec"
+    elif d.get("commonSpec"):
         path = os.path.join(os.path.dirname(os.path.abspath(spec_path)), d["commonSpec"])
-    if not path or not os.path.exists(path):
+        origin = "spec の commonSpec"
+    else:
         return None, None
+    if not os.path.exists(path):
+        sys.exit(f"[エラー] {origin} が指す共通仕様ファイルが無い: {path}")
     cs = json.load(open(path, encoding="utf-8"))
     return {r["id"] for r in cs.get("rules", [])}, path
 
